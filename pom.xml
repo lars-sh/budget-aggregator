@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<parent>
+		<groupId>de.lars-sh</groupId>
+		<artifactId>parent</artifactId>
+		<version>0.9.16</version>
+		<relativePath />
+	</parent>
+
+	<groupId>de.lars-sh.budget-aggregator</groupId>
+	<artifactId>budget-aggregator</artifactId>
+	<version>0.9.0-SNAPSHOT</version>
+
+	<name>Budget Aggregator</name>
+	<url>https://${parent-pom.github.organization}.github.io/${parent-pom.github.project}/</url>
+	<licenses>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/licenses/MIT</url>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Lars Knickrehm</name>
+			<email>mail@lars-sh.de</email>
+			<url>https://lars-sh.de/</url>
+		</developer>
+	</developers>
+
+	<scm>
+		<connection>scm:git:git@github.com:${parent-pom.github.organization}/${parent-pom.github.project}.git</connection>
+		<developerConnection>scm:git:git@github.com:${parent-pom.github.organization}/${parent-pom.github.project}.git</developerConnection>
+		<url>https://github.com/${parent-pom.github.organization}/${parent-pom.github.project}</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/${parent-pom.github.organization}/${parent-pom.github.project}/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>GitHub Actions</system>
+		<url>https://github.com/${parent-pom.github.organization}/${parent-pom.github.project}/actions</url>
+	</ciManagement>
+
+	<properties>
+		<parent-pom.create-changelog-md>false</parent-pom.create-changelog-md>
+		<parent-pom.github.project>budget-aggregator</parent-pom.github.project>
+
+		<eclipse.compiler.javadoc>disabled</eclipse.compiler.javadoc>
+		<maven.javadoc.failOnWarnings>false</maven.javadoc.failOnWarnings>
+		<shade.packageDependenciesPhase>package</shade.packageDependenciesPhase>
+
+		<jar.manifest.mainClass>de.larssh.budget.aggregator.cli.BudgetAggregatorCli</jar.manifest.mainClass>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>info.picocli</groupId>
+			<artifactId>picocli</artifactId>
+			<version>4.7.6</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+			<version>2.24.3</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi</artifactId>
+			<version>5.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>5.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-lite</artifactId>
+			<version>5.4.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml-full</artifactId>
+			<version>5.4.0</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<artifactId>maven-dependency-plugin</artifactId>
+					<configuration>
+						<usedDependencies combine.children="append">
+							<usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
+							<usedDependency>org.apache.poi:poi-ooxml-full</usedDependency>
+						</usedDependencies>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+</project>
