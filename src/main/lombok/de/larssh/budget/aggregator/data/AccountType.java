@@ -18,7 +18,7 @@ public enum AccountType {
 	/**
 	 * In German: Aufwendungen im Ergebnisplan/Ergebnisrechnung
 	 */
-	RESULT_NEGATIVE(0, 5_000_000, 6_000_000 - 1),
+	RESULT_NEGATIVE(-1, 5_000_000, 6_000_000 - 1),
 
 	/**
 	 * In German: Einzahlungen im Finanzplan/Finanzrechnung
@@ -28,7 +28,7 @@ public enum AccountType {
 	/**
 	 * In German: Auszahlungen im Finanzplan/Finanzrechnung
 	 */
-	INVEST_NEGATIVE(0, 7_000_000, 8_000_000 - 1);
+	INVEST_NEGATIVE(-1, 7_000_000, 8_000_000 - 1);
 
 	@PackagePrivate
 	static Optional<AccountType> of(final int accountId) {

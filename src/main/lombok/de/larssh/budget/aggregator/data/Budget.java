@@ -7,6 +7,7 @@ import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
@@ -16,7 +17,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.larssh.utils.Finals;
-import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Patterns;
@@ -43,19 +43,19 @@ public class Budget implements Comparable<Budget> {
 	private static final Comparator<Budget> COMPARATOR
 			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
-	@PackagePrivate
-	static final String CSV_HEADER_MUNICIPALITY = Finals.constant("GKZ");
+	public static final char CSV_SEPARATOR = Finals.constant('\t');
+
+	public static final char CSV_ESCAPER = Finals.constant('"');
+
+	public static final String CSV_HEADER_MUNICIPALITY = Finals.constant("GKZ");
 
 	private static final String CSV_HEADER_BUDGET_YEAR = Finals.constant("HHJ");
 
-	@PackagePrivate
-	static final String CSV_HEADER_PRODUCT_ID = Finals.constant("Budget");
+	public static final String CSV_HEADER_PRODUCT_ID = Finals.constant("Budget");
 
-	@PackagePrivate
-	static final String CSV_HEADER_PRODUCT_DESCRIPTION = Finals.constant("Bezeichnung Budget");
+	public static final String CSV_HEADER_PRODUCT_DESCRIPTION = Finals.constant("Bezeichnung Budget");
 
-	@PackagePrivate
-	static final String CSV_HEADER_ACCOUNT = Finals.constant("Bezeichnung Position");
+	public static final String CSV_HEADER_ACCOUNT = Finals.constant("Bezeichnung Position");
 
 	public static Set<Budget> of(final Csv csv) throws StringParseException {
 		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CSV_HEADER_ACCOUNT);
@@ -135,6 +135,24 @@ public class Budget implements Comparable<Budget> {
 	@Override
 	public int compareTo(@Nullable final Budget other) {
 		return COMPARATOR.compare(this, other);
+	}
+
+	public boolean equalsIncludingBalances(final Budget other) {
+		return equals(other) && containsBalances(other) && other.containsBalances(this);
+	}
+
+	private boolean containsBalances(final Budget other) {
+		for (final Entry<Account, Balance> entry : other.getBalances().entrySet()) {
+			final BigDecimal otherValue = entry.getValue().getValue();
+
+			if (otherValue.compareTo(BigDecimal.ZERO) != 0) {
+				final Balance thisBalance = getBalances().get(entry.getKey());
+				if (thisBalance != null && thisBalance.getValue().compareTo(otherValue) != 0) {
+					return false;
+				}
+			}
+		}
+		return true;
 	}
 
 	public Map<Account, Balance> getBalances() {

@@ -44,14 +44,14 @@ public class BudgetType implements Comparable<BudgetType> {
 	};
 
 	private static final Comparator<BudgetType> COMPARATOR = COMPARATOR_DEFAULT_VALUES //
-			.thenComparing(Comparators.compareCaseInsensitiveFirst(BudgetType::getValue));
+			.thenComparing(Comparators.compareCaseInsensitiveFirst(BudgetType::getName));
 
 	public static BudgetType of(final String type) {
 		return CACHE.computeIfAbsent(type, BudgetType::new);
 	}
 
 	@EqualsAndHashCode.Include
-	String value;
+	String name;
 
 	@Override
 	public int compareTo(@Nullable final BudgetType other) {

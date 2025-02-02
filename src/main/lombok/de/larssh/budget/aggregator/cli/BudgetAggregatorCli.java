@@ -1,6 +1,7 @@
 package de.larssh.budget.aggregator.cli;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
 
@@ -10,9 +11,15 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.Callable;
 import java.util.jar.Attributes.Name;
 import java.util.regex.Pattern;
@@ -22,6 +29,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
+import de.larssh.budget.aggregator.data.Account;
+import de.larssh.budget.aggregator.data.Balance;
 import de.larssh.budget.aggregator.data.Budget;
 import de.larssh.budget.aggregator.utils.CellValues;
 import de.larssh.utils.Nullables;
@@ -53,6 +62,13 @@ import picocli.CommandLine.Spec;
 		versionProvider = BudgetAggregatorCli.class,
 		description = "TODO")
 public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider {
+	private static final DecimalFormat DECIMAL_FORMAT
+			= (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.GERMANY);
+	static {
+		DECIMAL_FORMAT.setPositiveSuffix(" €");
+		DECIMAL_FORMAT.setNegativeSuffix(" €");
+	}
+
 	/**
 	 * The CLI interface for {@link LocalElectionResult}.
 	 *
@@ -85,32 +101,36 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	@Override
 	public Integer call() throws IOException, StringParseException {
 		final List<Budget> budgets = readBudgets();
-		System.out.println(budgets);
 
-		// final List<Content> mergedContents = mergeContents(contents); final
-		// Set<Header> collectedKeyHeaders = collectKeyHeaders(mergedContents); final
-		// Map<Sheet, Set<Header>> collectedValueHeaders =
-		// collectValueHeaders(mergedContents); // Print Headers for (final Header
-		// header : collectedKeyHeaders) {
-		// getStandardOutputWriter().print(CellValues.getAsString(CellValues.create(header.getCell(),
-		// true))); getStandardOutputWriter().print("\t"); } for (final Entry<Sheet,
-		// Set<Header>> entry : collectedValueHeaders.entrySet()) { for (final Header
-		// header : entry.getValue()) {
-		// getStandardOutputWriter().print(entry.getKey().getSheetName() + " " +
-		// CellValues.getAsString(CellValues.create(header.getCell(), true)));
-		// getStandardOutputWriter().print("\t"); } }
-		// getStandardOutputWriter().println(); // Print Values for (final Content
-		// content : mergedContents) { for (final Header header : collectedKeyHeaders) {
-		// final Cell value = content.getKeys().get(header); getStandardOutputWriter()
-		// .print(value == null ? "" : CellValues.getAsString(CellValues.create(value,
-		// true))); getStandardOutputWriter().print("\t"); } for (final Entry<Sheet,
-		// Set<Header>> entry : collectedValueHeaders.entrySet()) { final Map<Header,
-		// Cell> values = content.getValues().get(entry.getKey()); for (final Header
-		// header : entry.getValue()) { final Cell value = Nullables.map(values, v ->
-		// v.get(header)); getStandardOutputWriter() .print(value == null ? "" :
-		// CellValues.getAsString(CellValues.create(value, true)));
-		// getStandardOutputWriter().print("\t"); } }
-		// getStandardOutputWriter().println(); }
+		final Set<Account> accounts = new TreeSet<>();
+		for (final Budget budget : budgets) {
+			accounts.addAll(budget.getBalances().keySet());
+		}
+
+		final Csv csv = new Csv(singletonList(new ArrayList<>(Arrays.asList(Budget.CSV_HEADER_MUNICIPALITY,
+				Budget.CSV_HEADER_PRODUCT_ID,
+				Budget.CSV_HEADER_PRODUCT_DESCRIPTION,
+				Budget.CSV_HEADER_ACCOUNT))));
+		for (final Account account : accounts) {
+			csv.add(new ArrayList<>(Arrays.asList( //
+					Integer.toString(account.getProduct().getMunicipality().getId()),
+					Integer.toString(account.getProduct().getId()),
+					account.getProduct().getDescription(),
+					String.format("%d %s", account.getId(), account.getDescription()))));
+		}
+
+		for (final Budget budget : budgets) {
+			csv.get(0).add(String.format("%s %d", budget.getType().getName(), budget.getYear()));
+
+			int rowIndex = 1;
+			final Map<Account, Balance> balances = budget.getBalances();
+			for (final Account account : accounts) {
+				final Balance balance = balances.get(account);
+				csv.get(rowIndex).add(balance == null ? "" : DECIMAL_FORMAT.format(balance.getValue()));
+				rowIndex += 1;
+			}
+		}
+		System.out.println(csv.toString(Budget.CSV_SEPARATOR, Budget.CSV_ESCAPER));
 
 		return ExitCode.OK;
 	}
@@ -122,7 +142,19 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 				budgets.addAll(Budget.of(sheet));
 			}
 		}
+
 		sort(budgets);
+
+		// Remove duplicate budgets
+		int index = 1;
+		while (index < budgets.size()) {
+			if (budgets.get(index).equalsIncludingBalances(budgets.get(index - 1))) {
+				budgets.remove(index);
+			} else {
+				index += 1;
+			}
+		}
+
 		return budgets;
 	}
 
@@ -134,7 +166,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 
 	private Csv readCsv(final Path source) throws IOException {
 		try (Reader reader = Files.newBufferedReader(source)) {
-			return Csv.parse(reader, '\t', Csv.DEFAULT_ESCAPER);
+			return Csv.parse(reader, Budget.CSV_SEPARATOR, Budget.CSV_ESCAPER);
 		}
 	}
 
