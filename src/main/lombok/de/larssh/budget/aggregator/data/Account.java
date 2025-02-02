@@ -63,4 +63,10 @@ public class Account implements Comparable<Account> {
 	public int compareTo(@Nullable final Account other) {
 		return COMPARATOR.compare(this, other);
 	}
+
+	public AccountType getType() {
+		return AccountType.of(getId())
+				.orElseThrow(() -> new IllegalArgumentException(
+						String.format("Failed determining the account type for account ID %d.", getId())));
+	}
 }

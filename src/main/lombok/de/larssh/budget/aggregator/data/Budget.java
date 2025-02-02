@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableMap;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -14,7 +15,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.Finals;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Csv;
@@ -38,11 +38,10 @@ import lombok.ToString;
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class Budget implements Comparable<Budget> {
 	private static final Pattern BUDGET_HEADER_PATTERN
-			= Pattern.compile("^\\s*(?<budgetType>.+?)\\s*(?<year>\\d+)?\\s*$");
+			= Pattern.compile("^\\s*(?<budgetType>.+?)\\s*((?<year>\\d+)|(?<yearBefore>Vorjahr))?\\s*$");
 
-	private static final Comparator<Budget> COMPARATOR = Comparator.<Budget>comparingInt(Budget::getYear)
-			.thenComparing(Comparators.compareOptional(Budget::getPlanType)) // TODO
-			.thenComparing(Budget::getType);
+	private static final Comparator<Budget> COMPARATOR
+			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
 	@PackagePrivate
 	static final String CSV_HEADER_MUNICIPALITY = Finals.constant("GKZ");
@@ -64,7 +63,7 @@ public class Budget implements Comparable<Budget> {
 			return emptySet();
 		}
 
-		final Map<Budget, Budget> budgets = new TreeMap<>();
+		final Map<Budget, Budget> budgets = new LinkedHashMap<>();
 		for (final CsvRow row : csv.subList(1, csv.size())) {
 			try {
 				final Optional<Account> account = Account.of(row);
@@ -78,7 +77,6 @@ public class Budget implements Comparable<Budget> {
 				throw new StringParseException(e, "Failed reading row %d.", row.getRowIndex());
 			}
 		}
-		System.out.println(budgets.keySet());
 		return budgets.keySet();
 	}
 
@@ -92,18 +90,18 @@ public class Budget implements Comparable<Budget> {
 			return;
 		}
 
-		final OptionalInt year = getYear(columnHeaderMatcher.get(), row);
+		final OptionalInt year = determineYear(row, columnHeaderMatcher.get());
 		if (!year.isPresent()) {
 			return;
 		}
 
 		final BudgetType budgetType = BudgetType.of(columnHeaderMatcher.get().group("budgetType"));
 		final Budget budget = new Budget(year.getAsInt(), budgetType);
-		final Balance balance = new Balance(account, new BigDecimal(row.get(column)), "");
+		final Balance balance = new Balance(account, determineValue(account, row, column), "");
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
 
-	private static OptionalInt getYear(final Matcher columnHeaderMatcher, final CsvRow row) {
+	private static OptionalInt determineYear(final CsvRow row, final Matcher columnHeaderMatcher) {
 		final String year = columnHeaderMatcher.group("year");
 		if (year != null) {
 			return OptionalInt.of(Integer.parseInt(year));
@@ -113,7 +111,14 @@ public class Budget implements Comparable<Budget> {
 		if (!yearCell.isPresent() || Strings.isBlank(yearCell.get())) {
 			return OptionalInt.empty();
 		}
-		return OptionalInt.of(Integer.parseInt(yearCell.get()));
+
+		final int offsetYears = columnHeaderMatcher.group("yearBefore") == null ? 0 : -1;
+		return OptionalInt.of(Integer.parseInt(yearCell.get()) + offsetYears);
+	}
+
+	private static BigDecimal determineValue(final Account account, final CsvRow row, final int column) {
+		final BigDecimal value = new BigDecimal(row.get(column));
+		return account.getType().getSign() < 0 ? value.negate() : value;
 	}
 
 	@EqualsAndHashCode.Include
@@ -125,6 +130,8 @@ public class Budget implements Comparable<Budget> {
 	@ToString.Exclude
 	Map<Account, Balance> balances = new TreeMap<>();
 
+	// TODO: Probably it makes sense to store the source here (file, sheet, column)
+
 	@Override
 	public int compareTo(@Nullable final Budget other) {
 		return COMPARATOR.compare(this, other);
@@ -132,12 +139,5 @@ public class Budget implements Comparable<Budget> {
 
 	public Map<Account, Balance> getBalances() {
 		return unmodifiableMap(balances);
-	}
-
-	public Optional<PlanType> getPlanType() {
-		if (getBalances().isEmpty()) {
-			return Optional.empty();
-		}
-		return PlanType.of(getBalances().keySet().iterator().next().getId());
 	}
 }

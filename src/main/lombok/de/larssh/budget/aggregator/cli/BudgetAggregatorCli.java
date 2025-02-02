@@ -85,6 +85,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	@Override
 	public Integer call() throws IOException, StringParseException {
 		final List<Budget> budgets = readBudgets();
+		System.out.println(budgets);
 
 		// final List<Content> mergedContents = mergeContents(contents); final
 		// Set<Header> collectedKeyHeaders = collectKeyHeaders(mergedContents); final

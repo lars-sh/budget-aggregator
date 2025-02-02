@@ -26,7 +26,6 @@ public class BudgetType implements Comparable<BudgetType> {
 	private static final Map<String, BudgetType> CACHE = synchronizedMap(new HashMap<>());
 
 	private static final Set<BudgetType> DEFAULT_VALUES = unmodifiableSet(new LinkedHashSet<>(Arrays.asList( //
-			of("Ist Vorjahr"),
 			of("Plan"),
 			of("Ist"),
 			of("Ergebnis"),
@@ -35,10 +34,10 @@ public class BudgetType implements Comparable<BudgetType> {
 	private static final Comparator<BudgetType> COMPARATOR_DEFAULT_VALUES = (a, b) -> {
 		for (final BudgetType budgetType : DEFAULT_VALUES) {
 			if (budgetType.equals(a)) {
-				return budgetType.equals(b) ? 0 : 1;
+				return budgetType.equals(b) ? 0 : -1;
 			}
 			if (budgetType.equals(b)) {
-				return -1;
+				return 1;
 			}
 		}
 		return 0;
