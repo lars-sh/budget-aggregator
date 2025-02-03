@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableMap;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -17,6 +18,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import de.larssh.utils.Finals;
+import de.larssh.utils.Nullables;
 import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Patterns;
@@ -28,6 +30,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.NonFinal;
 
 /**
  * In German: Haushalt
@@ -84,6 +87,14 @@ public class Budget implements Comparable<Budget> {
 			final Account account,
 			final CsvRow row,
 			final int column) {
+		if (column >= row.size()) {
+			return;
+		}
+		final String cellValue = Nullables.orElseThrow(row.get(column));
+		if (Strings.isBlank(cellValue)) {
+			return;
+		}
+
 		final String title = row.getCsv().getHeaders().get(column);
 		final Optional<Matcher> columnHeaderMatcher = Patterns.matches(BUDGET_HEADER_PATTERN, title);
 		if (!columnHeaderMatcher.isPresent()) {
@@ -97,7 +108,7 @@ public class Budget implements Comparable<Budget> {
 
 		final BudgetType budgetType = BudgetType.of(columnHeaderMatcher.get().group("budgetType"));
 		final Budget budget = new Budget(year.getAsInt(), budgetType);
-		final Balance balance = new Balance(account, determineValue(account, row, column), "");
+		final Balance balance = new Balance(account, determineValue(cellValue, account), "");
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
 
@@ -116,9 +127,9 @@ public class Budget implements Comparable<Budget> {
 		return OptionalInt.of(Integer.parseInt(yearCell.get()) + offsetYears);
 	}
 
-	private static BigDecimal determineValue(final Account account, final CsvRow row, final int column) {
-		final BigDecimal value = new BigDecimal(row.get(column));
-		return account.getType().getSign() < 0 ? value.negate() : value;
+	private static BigDecimal determineValue(final String cellValue, final Account account) {
+		final BigDecimal number = new BigDecimal(cellValue);
+		return account.getType().getSign() < 0 ? number.negate() : number;
 	}
 
 	@EqualsAndHashCode.Include
@@ -131,6 +142,9 @@ public class Budget implements Comparable<Budget> {
 	Map<Account, Balance> balances = new TreeMap<>();
 
 	// TODO: Probably it makes sense to store the source here (file, sheet, column)
+
+	@NonFinal
+	boolean modifiable = true;
 
 	@Override
 	public int compareTo(@Nullable final Budget other) {
@@ -156,6 +170,28 @@ public class Budget implements Comparable<Budget> {
 	}
 
 	public Map<Account, Balance> getBalances() {
-		return unmodifiableMap(balances);
+		return modifiable ? balances : unmodifiableMap(balances);
+	}
+
+	public int removeEmptyBalances() {
+		if (!modifiable) {
+			throw new UnsupportedOperationException();
+		}
+
+		int count = 0;
+		final Iterator<Balance> iterator = getBalances().values().iterator();
+		while (iterator.hasNext()) {
+			final Balance balance = iterator.next();
+			if (balance.getValue().compareTo(BigDecimal.ZERO) == 0) {
+				iterator.remove();
+				count += 1;
+			}
+		}
+		return count;
+	}
+
+	public Budget unmodifiable() {
+		modifiable = false;
+		return this;
 	}
 }

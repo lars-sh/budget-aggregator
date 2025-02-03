@@ -1,14 +1,18 @@
 package de.larssh.budget.aggregator.cli;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.sort;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toSet;
 
+import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -32,6 +36,7 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import de.larssh.budget.aggregator.data.Account;
 import de.larssh.budget.aggregator.data.Balance;
 import de.larssh.budget.aggregator.data.Budget;
+import de.larssh.budget.aggregator.data.BudgetType;
 import de.larssh.budget.aggregator.utils.CellValues;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.io.Resources;
@@ -40,6 +45,7 @@ import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.StringParseException;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.NonFinal;
 import picocli.CommandLine;
@@ -47,12 +53,14 @@ import picocli.CommandLine.Command;
 import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.IVersionProvider;
 import picocli.CommandLine.Model.CommandSpec;
+import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**
  * The CLI interface for {@link BudgetAggregator}
  */
+@Getter
 @RequiredArgsConstructor
 @SuppressWarnings("PMD.ExcessiveImports")
 @Command(name = "budget-aggregator",
@@ -88,12 +96,40 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	CommandSpec commandSpec = null;
 
 	@NonFinal
-	@Parameters(index = "0", descriptionKey = "SOURCES") // TODO: description
+	@Option(names = "--filter-budget-types", converter = BudgetTypeConverter.class)
+	Set<BudgetType> filterBudgetTypes = emptySet();
+
+	@NonFinal
+	@Option(names = "--filter-years", converter = YearsConverter.class)
+	final Set<Integer> filterYears = emptySet();
+
+	@NonFinal
+	@Option(names = "--hide-duplicate-budgets", defaultValue = "true", fallbackValue = "true", negatable = true)
+	boolean hideDuplicateBudgets;
+
+	@NonFinal
+	@Option(names = "--hide-empty-accounts", defaultValue = "true", fallbackValue = "true", negatable = true)
+	boolean hideEmptyAccounts;
+
+	@NonFinal
+	@Option(names = "--hide-empty-balances", defaultValue = "true", fallbackValue = "true", negatable = true)
+	boolean hideEmptyBalances;
+
+	@NonFinal
+	@Option(names = "--hide-empty-budgets", defaultValue = "true", fallbackValue = "true", negatable = true)
+	boolean hideEmptyBudgets;
+
+	@NonFinal
+	@Option(names = "--open-output", defaultValue = "false", negatable = true)
+	boolean openOutput;
+
+	@NonFinal
+	@Parameters(index = "0", descriptionKey = "SOURCES")
 	List<Path> sources = emptyList();
 
 	@NonFinal
 	@Nullable
-	@Parameters(index = "1", descriptionKey = "DESTINATION") // TODO: description
+	@Parameters(index = "1", descriptionKey = "DESTINATION", arity = "0..1")
 	Path destination = null;
 
 	private static final Pattern CSV_FILE_EXTENSION_PATTERN = Pattern.compile("(?i)\\.csv$");
@@ -132,6 +168,10 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		}
 		System.out.println(csv.toString(Budget.CSV_SEPARATOR, Budget.CSV_ESCAPER));
 
+		if (isOpenOutput() && Desktop.isDesktopSupported()) {
+			Desktop.getDesktop().open(getDestination().toFile());
+		}
+
 		return ExitCode.OK;
 	}
 
@@ -143,9 +183,32 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 			}
 		}
 
-		sort(budgets);
+		if (!getFilterBudgetTypes().isEmpty()) {
+			budgets.removeIf(budget -> !getFilterBudgetTypes().contains(budget.getType()));
+		}
+		if (!getFilterYears().isEmpty()) {
+			budgets.removeIf(budget -> !getFilterYears().contains(budget.getYear()));
+		}
+		if (isHideEmptyAccounts()) {
+			removeEmptyAccounts(budgets);
+		}
+		if (isHideEmptyBalances()) {
+			budgets.forEach(Budget::removeEmptyBalances);
+		}
+		if (isHideEmptyBudgets()) {
+			removeEmptyBudgets(budgets);
+		}
 
-		// Remove duplicate budgets
+		sort(budgets);
+		if (isHideDuplicateBudgets()) {
+			removeDuplicateBudgets(budgets);
+		}
+
+		return budgets;
+	}
+
+	private void removeDuplicateBudgets(final List<Budget> budgets) {
+		// Prerequisite: budgets must be sorted!
 		int index = 1;
 		while (index < budgets.size()) {
 			if (budgets.get(index).equalsIncludingBalances(budgets.get(index - 1))) {
@@ -154,8 +217,34 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 				index += 1;
 			}
 		}
+	}
 
-		return budgets;
+	private void removeEmptyAccounts(final List<Budget> budgets) {
+		// Get all accounts
+		final Set<Account> accounts = budgets.stream() //
+				.flatMap(budget -> budget.getBalances().keySet().stream())
+				.collect(toSet());
+
+		for (final Account account : accounts) {
+			// Check if current account is empty
+			final boolean isEmptyAccount = budgets.stream()
+					.map(budget -> budget.getBalances().get(account))
+					.allMatch(balance -> balance == null || balance.getValue().compareTo(BigDecimal.ZERO) == 0);
+
+			// Remove account if empty
+			if (isEmptyAccount) {
+				for (final Budget budget : budgets) {
+					budget.getBalances().remove(account);
+				}
+			}
+		}
+	}
+
+	private void removeEmptyBudgets(final List<Budget> budgets) {
+		budgets.removeIf(budget -> budget.getBalances()
+				.values()
+				.stream()
+				.allMatch(balance -> balance.getValue().compareTo(BigDecimal.ZERO) == 0));
 	}
 
 	private List<Csv> read(final Path path) throws IOException {
@@ -200,7 +289,14 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		return cells;
 	}
 
-	private Path getDestination() {
+	private CommandSpec getCommandSpec() {
+		return Nullables.orElseThrow(commandSpec);
+	}
+
+	private synchronized Path getDestination() throws IOException {
+		if (destination == null) {
+			destination = Files.createTempFile("budget-aggregator", ".csv");
+		}
 		return Nullables.orElseThrow(destination);
 	}
 
@@ -214,7 +310,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	 * @return the standard output writer
 	 */
 	private PrintWriter getStandardOutputWriter() {
-		return Nullables.orElseThrow(commandSpec).commandLine().getOut();
+		return getCommandSpec().commandLine().getOut();
 	}
 
 	/** {@inheritDoc} */
@@ -233,7 +329,8 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	@SuppressFBWarnings(value = "UPM_UNCALLED_PRIVATE_METHOD", justification = "dummy method")
 	private void nonFinalDummy() {
 		commandSpec = null;
-		destination = null;
+		filterBudgetTypes = emptySet();
 		sources = emptyList();
+		destination = null;
 	}
 }

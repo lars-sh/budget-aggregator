@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 import de.larssh.budget.aggregator.utils.Comparators;
+import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -46,8 +47,11 @@ public class BudgetType implements Comparable<BudgetType> {
 	private static final Comparator<BudgetType> COMPARATOR = COMPARATOR_DEFAULT_VALUES //
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(BudgetType::getName));
 
-	public static BudgetType of(final String type) {
-		return CACHE.computeIfAbsent(type, BudgetType::new);
+	public static BudgetType of(final String name) {
+		if (Strings.isBlank(name)) {
+			throw new IllegalArgumentException("The budget type name must not be blank.");
+		}
+		return CACHE.computeIfAbsent(name, BudgetType::new);
 	}
 
 	@EqualsAndHashCode.Include
