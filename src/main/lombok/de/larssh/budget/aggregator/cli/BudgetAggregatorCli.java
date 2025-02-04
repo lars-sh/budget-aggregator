@@ -52,8 +52,7 @@ import picocli.CommandLine.Spec;
 		mixinStandardHelpOptions = true,
 		showDefaultValues = true,
 		usageHelpWidth = 160,
-		versionProvider = BudgetAggregatorCli.class,
-		description = "TODO")
+		versionProvider = BudgetAggregatorCli.class)
 public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider {
 	/**
 	 * The CLI interface for {@link LocalElectionResult}.
@@ -74,7 +73,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	CommandSpec commandSpec;
 
 	@NonFinal
-	@Parameters(index = "0", descriptionKey = "SOURCES")
+	@Parameters(descriptionKey = "SOURCES")
 	List<Path> sources = emptyList();
 
 	@NonFinal

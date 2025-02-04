@@ -60,7 +60,7 @@ public class Budget implements Comparable<Budget> {
 			try {
 				final Optional<Account> account = Account.of(row);
 				if (account.isPresent()) {
-					final int headerSize = row.getCsv().getHeaders().size();
+					final int headerSize = csv.getHeaders().size();
 					for (int columnIndex = lastNonBalanceColumn + 1; columnIndex < headerSize; columnIndex += 1) {
 						addBalance(budgets, account.get(), row, columnIndex);
 					}
@@ -100,7 +100,7 @@ public class Budget implements Comparable<Budget> {
 		row.get(CsvFiles.HEADER_BUDGET_YEAR).ifPresent(y -> budget.setReference(BudgetReference.BUDGET_YEAR, y));
 		budget.setReference(BudgetReference.COLUMN, CellReference.convertNumToColString(columnIndex));
 
-		final Balance balance = new Balance(account, determineValue(cellValue, account), "");
+		final Balance balance = new Balance(account, determineValue(cellValue, account));
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
 

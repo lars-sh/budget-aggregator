@@ -28,8 +28,7 @@ public class Account implements Comparable<Account> {
 
 	private static final Comparator<Account> COMPARATOR = Comparator.comparing(Account::getProduct)
 			.thenComparingInt(Account::getId)
-			.thenComparing(Comparators.compareCaseInsensitiveFirst(Account::getDescription))
-			.thenComparing(Comparators.compareCaseInsensitiveFirst(Account::getComment));
+			.thenComparing(Comparators.compareCaseInsensitiveFirst(Account::getDescription));
 
 	@PackagePrivate
 	static Optional<Account> of(final CsvRow row) {
@@ -46,8 +45,7 @@ public class Account implements Comparable<Account> {
 		return Patterns.matches(CELL_PATTERN, accountCell.get())
 				.map(matcher -> new Account(product.get(),
 						Integer.parseInt(matcher.group("id")),
-						matcher.group("description"),
-						""));
+						matcher.group("description")));
 	}
 
 	@EqualsAndHashCode.Include
@@ -57,8 +55,6 @@ public class Account implements Comparable<Account> {
 	int id;
 
 	String description;
-
-	String comment; // TODO: Comment if the sheet contains more than one data column
 
 	@Override
 	public int compareTo(@Nullable final Account other) {

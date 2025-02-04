@@ -6,10 +6,10 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum BudgetReference {
+	BUDGET_YEAR("Haushaltsjahr"),
 	FILE_NAME("Datei"),
 	SHEET("Registerkarte"),
-	COLUMN("Spalte"),
-	BUDGET_YEAR("Haushaltsjahr");
+	COLUMN("Spalte");
 
 	String displayValue;
 }

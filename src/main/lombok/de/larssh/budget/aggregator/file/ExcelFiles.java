@@ -27,6 +27,7 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.CreationHelper;
+import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -36,6 +37,7 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.ss.util.SheetUtil;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -49,13 +51,14 @@ import de.larssh.budget.aggregator.data.Account;
 import de.larssh.budget.aggregator.data.Balance;
 import de.larssh.budget.aggregator.data.Budget;
 import de.larssh.budget.aggregator.data.BudgetReference;
+import de.larssh.budget.aggregator.data.BudgetType;
 import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.budget.aggregator.data.Product;
 import de.larssh.budget.aggregator.utils.CellValues;
 import de.larssh.utils.annotations.PackagePrivate;
+import de.larssh.utils.collection.Maps;
 import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.StringParseException;
-import de.larssh.utils.text.Strings;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
@@ -109,6 +112,11 @@ public class ExcelFiles {
 		 */
 		private static final int AUTO_FILTER_WIDTH = 563;
 
+		private static final Map<BudgetType, XSSFColor> BACKGROUND_COLORS = Maps.<BudgetType, XSSFColor>builder()
+				.put(BudgetType.of("Plan"), new XSSFColor(new byte[] { 0, (byte) 255, (byte) 255, (byte) 204 }))
+				.put(BudgetType.of("Ist"), new XSSFColor(new byte[] { 0, (byte) 204, (byte) 255, (byte) 204 }))
+				.unmodifiable();
+
 		/**
 		 * Width of one character
 		 */
@@ -157,7 +165,6 @@ public class ExcelFiles {
 
 			final Comment comment = cell.getSheet().createDrawingPatriarch().createCellComment(clientAnchor);
 			comment.setString(creationHelper.createRichTextString(value));
-			// comment.setAuthor("Apache POI");
 
 			cell.setCellComment(comment);
 		}
@@ -191,6 +198,10 @@ public class ExcelFiles {
 			return table;
 		}
 
+		private static Optional<XSSFColor> getBackgroundColor(final Budget budget) {
+			return Optional.ofNullable(BACKGROUND_COLORS.get(budget.getType()));
+		}
+
 		/**
 		 * Sets a numeric {@code value} for {@code cell}.
 		 *
@@ -220,98 +231,54 @@ public class ExcelFiles {
 		 */
 		Map<String, CellStyle> cellStyleCache = new HashMap<>();
 
-		/**
-		 * Appends a cell to {@code row} after the currently last cell.
-		 *
-		 * @param <T>        the value's data type
-		 * @param row        the row to modify
-		 * @param dataFormat the Excel data format to set or empty
-		 * @param setValue   a method to set the value to the created cell
-		 * @param value      the value to set or empty
-		 * @return the created cell
-		 */
-		@SuppressWarnings("checkstyle:SuppressWarnings")
+		@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 		private <T> Cell appendCell(final Row row,
+				final Optional<XSSFColor> backgroundColor,
 				final Optional<String> dataFormat,
 				final BiConsumer<Cell, T> setValue,
 				final Optional<T> value) {
 			final Cell cell = CellUtil.getCell(row, Math.max(0, row.getLastCellNum()));
-			dataFormat.ifPresent(f -> cell.setCellStyle(getCellStyle(row.getSheet().getWorkbook(), f)));
+			getCellStyle(row.getSheet().getWorkbook(), backgroundColor, dataFormat).ifPresent(cell::setCellStyle);
 			if (value.isPresent()) {
 				setValue.accept(cell, value.get());
 			}
 			return cell;
 		}
 
-		/**
-		 * Appends a cell with boolean {@code value} to {@code row} after the currently
-		 * last cell.
-		 *
-		 * @param row   the row to modify
-		 * @param value the value to set or empty
-		 * @return the created cell
-		 */
 		private Cell appendBoolean(final Row row, final boolean value) {
-			return appendCell(row, Optional.empty(), Cell::setCellValue, Optional.of(value));
+			return appendCell(row, Optional.empty(), Optional.empty(), Cell::setCellValue, Optional.of(value));
 		}
 
-		/**
-		 * Appends a cell with {@code formula} to {@code row} after the currently last
-		 * cell.
-		 *
-		 * @param row        the row to modify
-		 * @param dataFormat the Excel data format to set or empty
-		 * @param formula    the formula to set
-		 * @return the created cell
-		 */
-		private Cell appendFormula(final Row row, final String dataFormat, final String formula) {
-			return appendCell(row, Optional.of(dataFormat), Cell::setCellFormula, Optional.of(formula));
+		private Cell appendFormula(final Row row,
+				final Optional<XSSFColor> backgroundColor,
+				final String dataFormat,
+				final String formula) {
+			return appendCell(row,
+					backgroundColor,
+					Optional.of(dataFormat),
+					Cell::setCellFormula,
+					Optional.of(formula));
 		}
 
-		/**
-		 * Appends a cell with numeric {@code value} to {@code row} after the currently
-		 * last cell.
-		 *
-		 * @param row   the row to modify
-		 * @param value the value to set or empty
-		 * @return the created cell
-		 */
 		private Cell appendNumber(final Row row, final Optional<? extends Number> value) {
-			return appendCell(row, Optional.empty(), ExcelFileWriter::setCellValue, value);
+			return appendCell(row, Optional.empty(), Optional.empty(), ExcelFileWriter::setCellValue, value);
 		}
 
-		/**
-		 * Appends a cell with numeric {@code value} to {@code row} after the currently
-		 * last cell.
-		 *
-		 * @param row        the row to modify
-		 * @param dataFormat the Excel data format to set or empty
-		 * @param value      the value to set or empty
-		 * @return the created cell
-		 */
-		private Cell appendNumber(final Row row, final String dataFormat, final Optional<? extends Number> value) {
-			return appendCell(row, Optional.of(dataFormat), ExcelFileWriter::setCellValue, value);
+		private Cell appendNumber(final Row row,
+				final Optional<XSSFColor> backgroundColor,
+				final String dataFormat,
+				final Optional<? extends Number> value) {
+			return appendCell(row, backgroundColor, Optional.of(dataFormat), ExcelFileWriter::setCellValue, value);
 		}
 
-		/**
-		 * Appends a cell with string {@code value} to {@code row} after the currently
-		 * last cell.
-		 *
-		 * @param row   the row to modify
-		 * @param value the value to set or empty
-		 * @return the created cell
-		 */
 		private Cell appendString(final Row row, final String value) {
-			return appendCell(row, Optional.empty(), Cell::setCellValue, Optional.of(value));
+			return appendString(row, Optional.empty(), value);
 		}
 
-		/**
-		 * Appends cells with string {@code values} to {@code row} after the currently
-		 * last cell.
-		 *
-		 * @param row    the row to modify
-		 * @param values the values to set
-		 */
+		private Cell appendString(final Row row, final Optional<XSSFColor> backgroundColor, final String value) {
+			return appendCell(row, backgroundColor, Optional.empty(), Cell::setCellValue, Optional.of(value));
+		}
+
 		private void appendStrings(final Row row, final String... values) {
 			for (final String value : values) {
 				appendString(row, value);
@@ -340,20 +307,25 @@ public class ExcelFiles {
 			return columnName;
 		}
 
-		/**
-		 * Returns a {@link CellStyle} instance for {@code dataFormat}. Cell styles are
-		 * cached and reused.
-		 *
-		 * @param workbook   the current workbook
-		 * @param dataFormat the Excel data format to set or empty
-		 * @return the {@link CellStyle} instance for {@code dataFormat}
-		 */
-		private CellStyle getCellStyle(final Workbook workbook, final String dataFormat) {
-			return cellStyleCache.computeIfAbsent(dataFormat, f -> {
-				final CellStyle cellStyle = workbook.createCellStyle();
-				cellStyle.setDataFormat(workbook.createDataFormat().getFormat(dataFormat));
-				return cellStyle;
-			});
+		private Optional<CellStyle> getCellStyle(final Workbook workbook,
+				final Optional<XSSFColor> backgroundColor,
+				final Optional<String> dataFormat) {
+			if (!backgroundColor.isPresent() && !dataFormat.isPresent()) {
+				return Optional.empty();
+			}
+
+			return Optional.of(cellStyleCache.computeIfAbsent(
+					backgroundColor.map(XSSFColor::getARGBHex).orElse("") + ';' + dataFormat.orElse(""),
+					key -> {
+						final CellStyle cellStyle = workbook.createCellStyle();
+						dataFormat.ifPresent(
+								format -> cellStyle.setDataFormat(workbook.createDataFormat().getFormat(format)));
+						backgroundColor.ifPresent(color -> {
+							cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+							cellStyle.setFillForegroundColor(color);
+						});
+						return cellStyle;
+					}));
 		}
 
 		@PackagePrivate
@@ -418,7 +390,8 @@ public class ExcelFiles {
 		private void appendProductBudgets(final XSSFSheet sheet, final Set<Product> products) {
 			for (final Budget budget : budgets) {
 				// Header
-				final Cell headerCell = appendString(sheet.getRow(0), getBudgetColumnName(budget));
+				final Cell headerCell
+						= appendString(sheet.getRow(0), getBackgroundColor(budget), getBudgetColumnName(budget));
 				addBudgetsComment(headerCell, budget);
 
 				// Balances
@@ -426,6 +399,7 @@ public class ExcelFiles {
 				for (@SuppressWarnings("unused")
 				final Product product : products) {
 					appendFormula(sheet.getRow(rowIndex),
+							getBackgroundColor(budget),
 							DATA_FORMAT_CURRENCY,
 							String.format(
 									"SUMIFS(Konten[%s], "
@@ -461,6 +435,7 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
 				appendFormula(row,
+						getBackgroundColor(budget),
 						DATA_FORMAT_CURRENCY,
 						"SUMIFS(Produkte[" + getBudgetColumnName(budget) + "], Produkte[Summieren], TRUE)");
 			}
@@ -501,10 +476,7 @@ public class ExcelFiles {
 				appendNumber(row, Optional.of(account.getProduct().getMunicipality().getId()));
 				appendNumber(row, Optional.of(account.getProduct().getId()));
 				appendString(row, account.getProduct().getDescription());
-				final Cell cell = appendNumber(row, Optional.of(account.getId()));
-				if (!Strings.isBlank(account.getComment())) {
-					addComment(cell, account.getComment());
-				}
+				appendNumber(row, Optional.of(account.getId()));
 				appendString(row, account.getDescription());
 				appendBoolean(row, true);
 
@@ -516,10 +488,10 @@ public class ExcelFiles {
 		}
 
 		private void appendAccountBudgets(final XSSFSheet sheet, final Set<Account> accounts) {
-			// TODO: Spalten für Ist und Plan farblich hinterlegen
 			for (final Budget budget : budgets) {
 				// Header
-				final Cell headerCell = appendString(sheet.getRow(0), getBudgetColumnName(budget));
+				final Cell headerCell
+						= appendString(sheet.getRow(0), getBackgroundColor(budget), getBudgetColumnName(budget));
 				addBudgetsComment(headerCell, budget);
 
 				// Balances
@@ -528,13 +500,10 @@ public class ExcelFiles {
 				for (final Account account : accounts) {
 					final Optional<Balance> balance = Optional.ofNullable(balances.get(account));
 
-					final Cell cell = appendNumber(sheet.getRow(rowIndex),
+					appendNumber(sheet.getRow(rowIndex),
+							getBackgroundColor(budget),
 							DATA_FORMAT_CURRENCY,
 							balance.map(Balance::getValue));
-					balance.map(Balance::getComment)
-							.filter(comment -> !Strings.isBlank(comment))
-							.ifPresent(comment -> addComment(cell, comment));
-
 					rowIndex += 1;
 				}
 			}
@@ -587,6 +556,7 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
 				appendFormula(row,
+						getBackgroundColor(budget),
 						DATA_FORMAT_CURRENCY,
 						"SUMIFS(Konten[" + getBudgetColumnName(budget) + "], Konten[Summieren], TRUE)");
 			}
