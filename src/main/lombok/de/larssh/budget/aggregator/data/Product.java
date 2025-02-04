@@ -3,6 +3,7 @@ package de.larssh.budget.aggregator.data;
 import java.util.Comparator;
 import java.util.Optional;
 
+import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.CsvRow;
@@ -33,12 +34,12 @@ public class Product implements Comparable<Product> {
 			return Optional.empty();
 		}
 
-		final Optional<String> id = row.get(Budget.CSV_HEADER_PRODUCT_ID);
+		final Optional<String> id = row.get(CsvFiles.HEADER_PRODUCT_ID);
 		if (!id.isPresent() || Strings.isBlank(id.get())) {
 			return Optional.empty();
 		}
 
-		final Optional<String> description = row.get(Budget.CSV_HEADER_PRODUCT_DESCRIPTION);
+		final Optional<String> description = row.get(CsvFiles.HEADER_PRODUCT_DESCRIPTION);
 		if (!id.isPresent()) {
 			return Optional.empty();
 		}

@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableMap;
 
 import java.math.BigDecimal;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -17,7 +18,9 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import de.larssh.utils.Finals;
+import org.apache.poi.ss.util.CellReference;
+
+import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.CsvRow;
@@ -46,22 +49,8 @@ public class Budget implements Comparable<Budget> {
 	private static final Comparator<Budget> COMPARATOR
 			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
-	public static final char CSV_SEPARATOR = Finals.constant('\t');
-
-	public static final char CSV_ESCAPER = Finals.constant('"');
-
-	public static final String CSV_HEADER_MUNICIPALITY = Finals.constant("GKZ");
-
-	private static final String CSV_HEADER_BUDGET_YEAR = Finals.constant("HHJ");
-
-	public static final String CSV_HEADER_PRODUCT_ID = Finals.constant("Budget");
-
-	public static final String CSV_HEADER_PRODUCT_DESCRIPTION = Finals.constant("Bezeichnung Budget");
-
-	public static final String CSV_HEADER_ACCOUNT = Finals.constant("Bezeichnung Position");
-
 	public static Set<Budget> of(final Csv csv) throws StringParseException {
-		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CSV_HEADER_ACCOUNT);
+		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CsvFiles.HEADER_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {
 			return emptySet();
 		}
@@ -72,8 +61,8 @@ public class Budget implements Comparable<Budget> {
 				final Optional<Account> account = Account.of(row);
 				if (account.isPresent()) {
 					final int headerSize = row.getCsv().getHeaders().size();
-					for (int column = lastNonBalanceColumn + 1; column < headerSize; column += 1) {
-						addBalance(budgets, account.get(), row, column);
+					for (int columnIndex = lastNonBalanceColumn + 1; columnIndex < headerSize; columnIndex += 1) {
+						addBalance(budgets, account.get(), row, columnIndex);
 					}
 				}
 			} catch (final Exception e) {
@@ -86,16 +75,16 @@ public class Budget implements Comparable<Budget> {
 	private static void addBalance(final Map<Budget, Budget> budgets,
 			final Account account,
 			final CsvRow row,
-			final int column) {
-		if (column >= row.size()) {
+			final int columnIndex) {
+		if (columnIndex >= row.size()) {
 			return;
 		}
-		final String cellValue = Nullables.orElseThrow(row.get(column));
+		final String cellValue = Nullables.orElseThrow(row.get(columnIndex));
 		if (Strings.isBlank(cellValue)) {
 			return;
 		}
 
-		final String title = row.getCsv().getHeaders().get(column);
+		final String title = row.getCsv().getHeaders().get(columnIndex);
 		final Optional<Matcher> columnHeaderMatcher = Patterns.matches(BUDGET_HEADER_PATTERN, title);
 		if (!columnHeaderMatcher.isPresent()) {
 			return;
@@ -108,6 +97,9 @@ public class Budget implements Comparable<Budget> {
 
 		final BudgetType budgetType = BudgetType.of(columnHeaderMatcher.get().group("budgetType"));
 		final Budget budget = new Budget(year.getAsInt(), budgetType);
+		row.get(CsvFiles.HEADER_BUDGET_YEAR).ifPresent(y -> budget.setReference(BudgetReference.BUDGET_YEAR, y));
+		budget.setReference(BudgetReference.COLUMN, CellReference.convertNumToColString(columnIndex));
+
 		final Balance balance = new Balance(account, determineValue(cellValue, account), "");
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
@@ -118,7 +110,7 @@ public class Budget implements Comparable<Budget> {
 			return OptionalInt.of(Integer.parseInt(year));
 		}
 
-		final Optional<String> yearCell = row.get(CSV_HEADER_BUDGET_YEAR);
+		final Optional<String> yearCell = row.get(CsvFiles.HEADER_BUDGET_YEAR);
 		if (!yearCell.isPresent() || Strings.isBlank(yearCell.get())) {
 			return OptionalInt.empty();
 		}
@@ -141,7 +133,7 @@ public class Budget implements Comparable<Budget> {
 	@ToString.Exclude
 	Map<Account, Balance> balances = new TreeMap<>();
 
-	// TODO: Probably it makes sense to store the source here (file, sheet, column)
+	Map<BudgetReference, String> references = new EnumMap<>(BudgetReference.class);
 
 	@NonFinal
 	boolean modifiable = true;
@@ -173,6 +165,10 @@ public class Budget implements Comparable<Budget> {
 		return modifiable ? balances : unmodifiableMap(balances);
 	}
 
+	public Map<BudgetReference, String> getReferences() {
+		return unmodifiableMap(references);
+	}
+
 	public int removeEmptyBalances() {
 		if (!modifiable) {
 			throw new UnsupportedOperationException();
@@ -188,6 +184,13 @@ public class Budget implements Comparable<Budget> {
 			}
 		}
 		return count;
+	}
+
+	public void setReference(final BudgetReference reference, final String value) {
+		if (!modifiable) {
+			throw new UnsupportedOperationException();
+		}
+		references.put(reference, value);
 	}
 
 	public Budget unmodifiable() {

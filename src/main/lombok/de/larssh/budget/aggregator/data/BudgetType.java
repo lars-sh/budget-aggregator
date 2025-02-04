@@ -29,7 +29,6 @@ public class BudgetType implements Comparable<BudgetType> {
 	private static final Set<BudgetType> DEFAULT_VALUES = unmodifiableSet(new LinkedHashSet<>(Arrays.asList( //
 			of("Plan"),
 			of("Ist"),
-			of("Ergebnis"),
 			of("Übertragen aus VJ"))));
 
 	private static final Comparator<BudgetType> COMPARATOR_DEFAULT_VALUES = (a, b) -> {
@@ -50,6 +49,9 @@ public class BudgetType implements Comparable<BudgetType> {
 	public static BudgetType of(final String name) {
 		if (Strings.isBlank(name)) {
 			throw new IllegalArgumentException("The budget type name must not be blank.");
+		}
+		if (name.equals("Ergebnis")) {
+			return of("Ist");
 		}
 		return CACHE.computeIfAbsent(name, BudgetType::new);
 	}

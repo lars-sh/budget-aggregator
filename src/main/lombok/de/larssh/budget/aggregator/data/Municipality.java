@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
+import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Strings;
@@ -31,7 +32,7 @@ public class Municipality implements Comparable<Municipality> {
 
 	@PackagePrivate
 	static Optional<Municipality> of(final CsvRow row) {
-		final Optional<String> id = row.get(Budget.CSV_HEADER_MUNICIPALITY);
+		final Optional<String> id = row.get(CsvFiles.HEADER_MUNICIPALITY);
 		if (!id.isPresent() || Strings.isBlank(id.get())) {
 			return Optional.empty();
 		}
