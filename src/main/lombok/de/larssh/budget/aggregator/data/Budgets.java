@@ -41,12 +41,15 @@ public class Budgets {
 
 	public static void removeDuplicateBudgets(final List<Budget> budgets) {
 		// Prerequisite: budgets must be sorted!
-		int index = 1;
-		while (index < budgets.size()) {
-			if (budgets.get(index).equalsIncludingBalances(budgets.get(index - 1))) {
-				budgets.remove(index - 1);
-			} else {
-				index += 1;
+		for (int index = 1; index < budgets.size(); index += 1) {
+			final Budget budget = budgets.get(index);
+
+			for (int index2 = index - 1; index2 >= 0 && budgets.get(index2).equals(budget); index2 -= 1) {
+				if (budget.equalsIncludingBalances(budgets.get(index2))) {
+					budgets.remove(index2);
+					index -= 1;
+					break;
+				}
 			}
 		}
 	}
