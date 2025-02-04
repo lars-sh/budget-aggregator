@@ -27,7 +27,7 @@ import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.ClientAnchor;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.CreationHelper;
-import org.apache.poi.ss.usermodel.FillPatternType;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -37,7 +37,6 @@ import org.apache.poi.ss.util.CellReference;
 import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.ss.util.SheetUtil;
 import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -55,6 +54,7 @@ import de.larssh.budget.aggregator.data.BudgetType;
 import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.budget.aggregator.data.Product;
 import de.larssh.budget.aggregator.utils.CellValues;
+import de.larssh.utils.Nullables;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.collection.Maps;
 import de.larssh.utils.text.Csv;
@@ -112,10 +112,11 @@ public class ExcelFiles {
 		 */
 		private static final int AUTO_FILTER_WIDTH = 563;
 
-		private static final Map<BudgetType, XSSFColor> BACKGROUND_COLORS = Maps.<BudgetType, XSSFColor>builder()
-				.put(BudgetType.of("Plan"), new XSSFColor(new byte[] { 0, (byte) 255, (byte) 255, (byte) 204 }))
-				.put(BudgetType.of("Ist"), new XSSFColor(new byte[] { 0, (byte) 204, (byte) 255, (byte) 204 }))
-				.unmodifiable();
+		private static final Map<BudgetType, SimplifiedCellStyle> SIMPLIFIED_CELL_STYLES
+				= Maps.<BudgetType, SimplifiedCellStyle>builder()
+						.put(BudgetType.of("Plan"), SimplifiedCellStyle.NORMAL)
+						.put(BudgetType.of("Ist"), SimplifiedCellStyle.BOLD)
+						.unmodifiable();
 
 		/**
 		 * Width of one character
@@ -198,8 +199,8 @@ public class ExcelFiles {
 			return table;
 		}
 
-		private static Optional<XSSFColor> getBackgroundColor(final Budget budget) {
-			return Optional.ofNullable(BACKGROUND_COLORS.get(budget.getType()));
+		private static SimplifiedCellStyle getSimplifiedCellStyle(final Budget budget) {
+			return Nullables.orElse(SIMPLIFIED_CELL_STYLES.get(budget.getType()), SimplifiedCellStyle.ITALIC);
 		}
 
 		/**
@@ -233,12 +234,12 @@ public class ExcelFiles {
 
 		@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 		private <T> Cell appendCell(final Row row,
-				final Optional<XSSFColor> backgroundColor,
+				final SimplifiedCellStyle simplifiedCellStyle,
 				final Optional<String> dataFormat,
 				final BiConsumer<Cell, T> setValue,
 				final Optional<T> value) {
 			final Cell cell = CellUtil.getCell(row, Math.max(0, row.getLastCellNum()));
-			getCellStyle(row.getSheet().getWorkbook(), backgroundColor, dataFormat).ifPresent(cell::setCellStyle);
+			getCellStyle(row.getSheet().getWorkbook(), simplifiedCellStyle, dataFormat).ifPresent(cell::setCellStyle);
 			if (value.isPresent()) {
 				setValue.accept(cell, value.get());
 			}
@@ -246,37 +247,41 @@ public class ExcelFiles {
 		}
 
 		private Cell appendBoolean(final Row row, final boolean value) {
-			return appendCell(row, Optional.empty(), Optional.empty(), Cell::setCellValue, Optional.of(value));
+			return appendCell(row,
+					SimplifiedCellStyle.NORMAL,
+					Optional.empty(),
+					Cell::setCellValue,
+					Optional.of(value));
 		}
 
 		private Cell appendFormula(final Row row,
-				final Optional<XSSFColor> backgroundColor,
+				final SimplifiedCellStyle simplifiedCellStyle,
 				final String dataFormat,
 				final String formula) {
 			return appendCell(row,
-					backgroundColor,
+					simplifiedCellStyle,
 					Optional.of(dataFormat),
 					Cell::setCellFormula,
 					Optional.of(formula));
 		}
 
 		private Cell appendNumber(final Row row, final Optional<? extends Number> value) {
-			return appendCell(row, Optional.empty(), Optional.empty(), ExcelFileWriter::setCellValue, value);
+			return appendCell(row, SimplifiedCellStyle.NORMAL, Optional.empty(), ExcelFileWriter::setCellValue, value);
 		}
 
 		private Cell appendNumber(final Row row,
-				final Optional<XSSFColor> backgroundColor,
+				final SimplifiedCellStyle simplifiedCellStyle,
 				final String dataFormat,
 				final Optional<? extends Number> value) {
-			return appendCell(row, backgroundColor, Optional.of(dataFormat), ExcelFileWriter::setCellValue, value);
+			return appendCell(row, simplifiedCellStyle, Optional.of(dataFormat), ExcelFileWriter::setCellValue, value);
 		}
 
 		private Cell appendString(final Row row, final String value) {
-			return appendString(row, Optional.empty(), value);
+			return appendString(row, SimplifiedCellStyle.NORMAL, value);
 		}
 
-		private Cell appendString(final Row row, final Optional<XSSFColor> backgroundColor, final String value) {
-			return appendCell(row, backgroundColor, Optional.empty(), Cell::setCellValue, Optional.of(value));
+		private Cell appendString(final Row row, final SimplifiedCellStyle simplifiedCellStyle, final String value) {
+			return appendCell(row, simplifiedCellStyle, Optional.empty(), Cell::setCellValue, Optional.of(value));
 		}
 
 		private void appendStrings(final Row row, final String... values) {
@@ -308,22 +313,27 @@ public class ExcelFiles {
 		}
 
 		private Optional<CellStyle> getCellStyle(final Workbook workbook,
-				final Optional<XSSFColor> backgroundColor,
+				final SimplifiedCellStyle simplifiedCellStyle,
 				final Optional<String> dataFormat) {
-			if (!backgroundColor.isPresent() && !dataFormat.isPresent()) {
+			if (simplifiedCellStyle == SimplifiedCellStyle.NORMAL && !dataFormat.isPresent()) {
 				return Optional.empty();
 			}
 
-			return Optional.of(cellStyleCache.computeIfAbsent(
-					backgroundColor.map(XSSFColor::getARGBHex).orElse("") + ';' + dataFormat.orElse(""),
-					key -> {
+			return Optional.of(
+					cellStyleCache.computeIfAbsent(simplifiedCellStyle.name() + ';' + dataFormat.orElse(""), key -> {
 						final CellStyle cellStyle = workbook.createCellStyle();
 						dataFormat.ifPresent(
 								format -> cellStyle.setDataFormat(workbook.createDataFormat().getFormat(format)));
-						backgroundColor.ifPresent(color -> {
-							cellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-							cellStyle.setFillForegroundColor(color);
-						});
+
+						if (simplifiedCellStyle != SimplifiedCellStyle.NORMAL) {
+							final Font font = workbook.createFont();
+							if (simplifiedCellStyle == SimplifiedCellStyle.BOLD) {
+								font.setBold(true);
+							} else if (simplifiedCellStyle == SimplifiedCellStyle.ITALIC) {
+								font.setItalic(true);
+							}
+							cellStyle.setFont(font);
+						}
 						return cellStyle;
 					}));
 		}
@@ -391,7 +401,7 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				// Header
 				final Cell headerCell
-						= appendString(sheet.getRow(0), getBackgroundColor(budget), getBudgetColumnName(budget));
+						= appendString(sheet.getRow(0), getSimplifiedCellStyle(budget), getBudgetColumnName(budget));
 				addBudgetsComment(headerCell, budget);
 
 				// Balances
@@ -399,7 +409,7 @@ public class ExcelFiles {
 				for (@SuppressWarnings("unused")
 				final Product product : products) {
 					appendFormula(sheet.getRow(rowIndex),
-							getBackgroundColor(budget),
+							getSimplifiedCellStyle(budget),
 							DATA_FORMAT_CURRENCY,
 							String.format(
 									"SUMIFS(Konten[%s], "
@@ -435,7 +445,7 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
 				appendFormula(row,
-						getBackgroundColor(budget),
+						getSimplifiedCellStyle(budget),
 						DATA_FORMAT_CURRENCY,
 						"SUMIFS(Produkte[" + getBudgetColumnName(budget) + "], Produkte[Summieren], TRUE)");
 			}
@@ -491,7 +501,7 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				// Header
 				final Cell headerCell
-						= appendString(sheet.getRow(0), getBackgroundColor(budget), getBudgetColumnName(budget));
+						= appendString(sheet.getRow(0), getSimplifiedCellStyle(budget), getBudgetColumnName(budget));
 				addBudgetsComment(headerCell, budget);
 
 				// Balances
@@ -501,7 +511,7 @@ public class ExcelFiles {
 					final Optional<Balance> balance = Optional.ofNullable(balances.get(account));
 
 					appendNumber(sheet.getRow(rowIndex),
-							getBackgroundColor(budget),
+							getSimplifiedCellStyle(budget),
 							DATA_FORMAT_CURRENCY,
 							balance.map(Balance::getValue));
 					rowIndex += 1;
@@ -556,10 +566,16 @@ public class ExcelFiles {
 			for (final Budget budget : budgets) {
 				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
 				appendFormula(row,
-						getBackgroundColor(budget),
+						getSimplifiedCellStyle(budget),
 						DATA_FORMAT_CURRENCY,
 						"SUMIFS(Konten[" + getBudgetColumnName(budget) + "], Konten[Summieren], TRUE)");
 			}
 		}
+	}
+
+	private enum SimplifiedCellStyle {
+		BOLD,
+		ITALIC,
+		NORMAL;
 	}
 }
