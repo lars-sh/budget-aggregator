@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
+import org.apache.poi.hssf.usermodel.HSSFWorkbookFactory;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -40,6 +41,7 @@ import org.apache.poi.xssf.usermodel.XSSFCell;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFTable;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbookFactory;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTCell;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.CTTableColumn;
@@ -65,6 +67,14 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ExcelFiles {
+	static {
+		// Making sure that both Workbook Factories are registered to support XLS and
+		// XLSX. Registering automatically might be a problem when creating a JAR with
+		// all dependencies.
+		WorkbookFactory.addProvider(new XSSFWorkbookFactory());
+		WorkbookFactory.addProvider(new HSSFWorkbookFactory());
+	}
+
 	public static List<Budget> read(final Path source) throws IOException, StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
 		try (InputStream inputStream = Files.newInputStream(source);
