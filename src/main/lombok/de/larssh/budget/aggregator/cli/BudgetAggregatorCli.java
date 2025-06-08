@@ -43,7 +43,7 @@ import picocli.CommandLine.Parameters;
 import picocli.CommandLine.Spec;
 
 /**
- * The CLI interface for {@link BudgetAggregator}
+ * The CLI interface of the Budget Aggregator
  */
 @Getter
 @RequiredArgsConstructor
@@ -55,7 +55,7 @@ import picocli.CommandLine.Spec;
 		versionProvider = BudgetAggregatorCli.class)
 public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider {
 	/**
-	 * The CLI interface for {@link LocalElectionResult}.
+	 * The CLI interface of the Budget Aggregator
 	 *
 	 * @param args CLI arguments
 	 */
