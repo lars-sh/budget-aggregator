@@ -86,7 +86,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 
 	@NonFinal
 	@Option(names = "--filter-years", converter = YearsConverter.class)
-	final Set<Integer> filterYears = emptySet();
+	Set<Integer> filterYears = emptySet();
 
 	@NonFinal
 	@Option(names = "--hide-duplicate-budgets", defaultValue = "true", fallbackValue = "true", negatable = true)
@@ -218,6 +218,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	private void nonFinalDummy() {
 		commandSpec = null;
 		filterBudgetTypes = emptySet();
+		filterYears = emptySet();
 		sources = emptyList();
 	}
 }
