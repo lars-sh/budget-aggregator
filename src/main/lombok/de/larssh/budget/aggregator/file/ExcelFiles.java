@@ -140,6 +140,16 @@ public class ExcelFiles {
 
 		private static final String DATA_FORMAT_CURRENCY = "#,##0.00\\ \"€\";[Red]\\-#,##0.00\\ \"€\"";
 
+		private static final String SHEET_NAME_ACCOUNTS = "Konten";
+
+		private static final String SHEET_NAME_BALANCES = "Produkte";
+
+		private static final String COLUMN_NAME_COMMUNITY = "Gemeinde";
+
+		private static final String COLUMN_NAME_BALANCE = "Produkt";
+
+		private static final String COLUMN_NAME_SUM = "Summieren";
+
 		/**
 		 * Excel data format for any number with any number of decimal places
 		 */
@@ -164,8 +174,9 @@ public class ExcelFiles {
 			}
 		}
 
+		@SuppressWarnings("checkstyle:MagicNumber")
 		private static void addComment(final Cell cell, final String value) {
-			@SuppressWarnings("resource")
+			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 			final CreationHelper creationHelper = cell.getSheet().getWorkbook().getCreationHelper();
 
 			final ClientAnchor clientAnchor = creationHelper.createClientAnchor();
@@ -353,8 +364,8 @@ public class ExcelFiles {
 			try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 				workbook.setCellFormulaValidation(false);
 
-				writeProducts(workbook.createSheet("Produkte"));
-				writeAccounts(workbook.createSheet("Konten"));
+				writeProducts(workbook.createSheet(SHEET_NAME_BALANCES));
+				writeAccounts(workbook.createSheet(SHEET_NAME_ACCOUNTS));
 
 				// Auto Size Columns
 				workbook.sheetIterator().forEachRemaining(sheet -> {
@@ -378,6 +389,7 @@ public class ExcelFiles {
 			}
 		}
 
+		@SuppressWarnings("checkstyle:MagicNumber")
 		private void writeProducts(final XSSFSheet sheet) {
 			final Set<Product> products = Budgets.getProducts(budgets);
 			appendProducts(sheet, products);
@@ -385,7 +397,7 @@ public class ExcelFiles {
 
 			// Table
 			sheet.createFreezePane(3, 0);
-			final XSSFTable table = createTable(sheet, "Produkte");
+			final XSSFTable table = createTable(sheet, SHEET_NAME_BALANCES);
 			table.getCTTable().getTableStyleInfo().setShowRowStripes(true);
 
 			// Totals Row
@@ -395,7 +407,8 @@ public class ExcelFiles {
 
 		private void appendProducts(final XSSFSheet sheet, final Set<Product> products) {
 			// Headers
-			appendStrings(appendRow(sheet), "Gemeinde", "Produkt", "Beschreibung", "Summieren");
+			appendStrings(appendRow(
+					sheet), COLUMN_NAME_COMMUNITY, COLUMN_NAME_BALANCE, "Beschreibung", COLUMN_NAME_SUM);
 
 			// Values
 			for (final Product product : products) {
@@ -416,16 +429,19 @@ public class ExcelFiles {
 
 				// Balances
 				int rowIndex = 1;
-				for (@SuppressWarnings("unused")
-				final Product product : products) {
+				for (int i = products.size(); i > 0; i -= 1) {
 					appendFormula(sheet.getRow(rowIndex),
 							getSimplifiedCellStyle(budget),
 							DATA_FORMAT_CURRENCY,
 							String.format(
-									"SUMIFS(Konten[%s], "
-											+ "Konten[Produkt], Produkte[[#This Row],[Produkt]], "
-											+ "Konten[Produktbeschreibung], Produkte[[#This Row],[Beschreibung]], "
-											+ "Konten[Summieren], TRUE)",
+									"SUMIFS(%1$s[%5$s], "
+											+ "%1$s[%3$s], %2$s[[#This Row],[%3$s]], "
+											+ "%1$s[Produktbeschreibung], %2$s[[#This Row],[Beschreibung]], "
+											+ "%1$s[%4$s], TRUE)",
+									SHEET_NAME_ACCOUNTS,
+									SHEET_NAME_BALANCES,
+									COLUMN_NAME_BALANCE,
+									COLUMN_NAME_SUM,
 									getBudgetColumnName(budget)));
 					rowIndex += 1;
 				}
@@ -452,13 +468,7 @@ public class ExcelFiles {
 			columns.next().setTotalsRowLabel("");
 			appendStrings(row, "");
 
-			for (final Budget budget : budgets) {
-				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
-				appendFormula(row,
-						getSimplifiedCellStyle(budget),
-						DATA_FORMAT_CURRENCY,
-						"SUMIFS(Produkte[" + getBudgetColumnName(budget) + "], Produkte[Summieren], TRUE)");
-			}
+			appendSumsForBudgets(row, columns);
 		}
 
 		private void writeAccounts(final XSSFSheet sheet) {
@@ -467,7 +477,7 @@ public class ExcelFiles {
 			appendAccountBudgets(sheet, accounts);
 
 			// Table
-			final XSSFTable table = createTable(sheet, "Konten");
+			final XSSFTable table = createTable(sheet, SHEET_NAME_ACCOUNTS);
 
 			// Totals Row
 			table.setDataRowCount(table.getDataRowCount() + 1);
@@ -478,12 +488,12 @@ public class ExcelFiles {
 			// Headers
 			final Row headerRow = appendRow(sheet);
 			appendStrings(headerRow,
-					"Gemeinde",
-					"Produkt",
+					COLUMN_NAME_COMMUNITY,
+					COLUMN_NAME_BALANCE,
 					"Produktbeschreibung",
 					"Konto",
 					"Kontobeschreibung",
-					"Summieren");
+					COLUMN_NAME_SUM);
 
 			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_MUNICIPALITY).getColumnIndex(), true);
 			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_PRODUCT_ID).getColumnIndex(), true);
@@ -573,12 +583,19 @@ public class ExcelFiles {
 			columns.next().setTotalsRowLabel("");
 			appendStrings(row, "");
 
+			appendSumsForBudgets(row, columns);
+		}
+
+		private void appendSumsForBudgets(final Row row, final Iterator<CTTableColumn> columnsIterator) {
 			for (final Budget budget : budgets) {
-				columns.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
+				columnsIterator.next().setTotalsRowFunction(STTotalsRowFunction.CUSTOM);
 				appendFormula(row,
 						getSimplifiedCellStyle(budget),
 						DATA_FORMAT_CURRENCY,
-						"SUMIFS(Konten[" + getBudgetColumnName(budget) + "], Konten[Summieren], TRUE)");
+						String.format("SUMIFS(%1$s[%3$s], %1$s[%2$s], TRUE)",
+								SHEET_NAME_BALANCES,
+								COLUMN_NAME_SUM,
+								getBudgetColumnName(budget)));
 			}
 		}
 	}

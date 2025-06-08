@@ -26,9 +26,11 @@ import lombok.ToString;
 public class BudgetType implements Comparable<BudgetType> {
 	private static final Map<String, BudgetType> CACHE = synchronizedMap(new HashMap<>());
 
-	private static final Set<BudgetType> DEFAULT_VALUES = unmodifiableSet(new LinkedHashSet<>(Arrays.asList( //
+	private static final BudgetType IST = of("Ist");
+
+	private static final Set<BudgetType> DEFAULT_VALUES = unmodifiableSet(new LinkedHashSet<>(Arrays.asList(//
 			of("Plan"),
-			of("Ist"),
+			IST,
 			of("Übertragen aus VJ"))));
 
 	private static final Comparator<BudgetType> COMPARATOR_DEFAULT_VALUES = (a, b) -> {
@@ -51,7 +53,7 @@ public class BudgetType implements Comparable<BudgetType> {
 			throw new IllegalArgumentException("The budget type name must not be blank.");
 		}
 		if (name.equals("Ergebnis")) {
-			return of("Ist");
+			return IST;
 		}
 		return CACHE.computeIfAbsent(name, BudgetType::new);
 	}

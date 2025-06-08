@@ -18,6 +18,10 @@ import picocli.CommandLine.ITypeConverter;
 public class YearsConverter implements ITypeConverter<Set<Integer>> {
 	private static final Pattern YEARS_PATTERN = Pattern.compile("^\\s*(?<from>\\d+)\\s*(-(?<to>\\d+))?\\s*$");
 
+	private static final String YEARS_PATTERN_TO = "to";
+
+	private static final String YEARS_PATTERN_FROM = "from";
+
 	@Override
 	public Set<Integer> convert(@Nullable final String value) {
 		return value == null
@@ -32,13 +36,13 @@ public class YearsConverter implements ITypeConverter<Set<Integer>> {
 				.orElseThrow(
 						() -> new IllegalArgumentException(String.format("Unexpected year pattern \"%s\".", value)));
 
-		final int from = Integer.parseInt(matcher.group("from"));
-		if (matcher.group("to") == null) {
+		final int from = Integer.parseInt(matcher.group(YEARS_PATTERN_FROM));
+		if (matcher.group(YEARS_PATTERN_TO) == null) {
 			return singleton(from);
 		}
 
 		final Set<Integer> years = new HashSet<>();
-		final int to = Integer.parseInt(matcher.group("to"));
+		final int to = Integer.parseInt(matcher.group(YEARS_PATTERN_TO));
 		for (int year = from; year <= to; year += 1) {
 			years.add(year);
 		}

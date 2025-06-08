@@ -21,6 +21,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CellValues {
+	@SuppressWarnings("checkstyle:ConstantName")
 	public static final CellValue _NONE = create(CellType._NONE, 0, false, null, 0);
 
 	public static final CellValue BLANK = create(CellType.BLANK, 0, false, null, 0);
@@ -45,7 +46,7 @@ public class CellValues {
 		}
 	}
 
-	@SuppressWarnings("resource")
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 	public static CellValue create(@Nullable final Cell cell, final boolean evaluateFormula) {
 		if (cell == null) {
 			return new CellValue("");
@@ -77,7 +78,7 @@ public class CellValues {
 		}
 	}
 
-	@SuppressWarnings("resource")
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 	private static CellValue evaluateFormula(final Cell cell) {
 		return FORMULA_EVALUATORS
 				.computeIfAbsent(cell.getSheet().getWorkbook(),

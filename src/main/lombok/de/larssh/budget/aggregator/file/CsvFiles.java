@@ -57,10 +57,12 @@ public class CsvFiles {
 
 	@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 	private static class CsvFileWriter {
+		private static final String DECIMAL_FORMAT_SUFFIX = " €";
+
 		private static final ThreadLocal<NumberFormat> DECIMAL_FORMAT = ThreadLocal.withInitial(() -> {
 			final DecimalFormat format = (DecimalFormat) NumberFormat.getCurrencyInstance(Locale.GERMANY);
-			format.setPositiveSuffix(" €");
-			format.setNegativeSuffix(" €");
+			format.setPositiveSuffix(DECIMAL_FORMAT_SUFFIX);
+			format.setNegativeSuffix(DECIMAL_FORMAT_SUFFIX);
 			return format;
 		});
 
@@ -85,7 +87,7 @@ public class CsvFiles {
 
 			// Values
 			for (final Account account : accounts) {
-				csv.add(new ArrayList<>(Arrays.asList( //
+				csv.add(new ArrayList<>(Arrays.asList(//
 						Integer.toString(account.getProduct().getMunicipality().getId()),
 						Integer.toString(account.getProduct().getId()),
 						account.getProduct().getDescription(),

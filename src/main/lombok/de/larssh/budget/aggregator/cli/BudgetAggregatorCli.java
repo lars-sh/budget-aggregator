@@ -146,7 +146,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 
 		// Write Output
 		if (!hasOutput() && !isOpenOutput()) {
-			@SuppressWarnings("resource")
+			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 			final Writer writer = getStandardOutputWriter();
 			CsvFiles.write(budgets, writer);
 			writer.flush();
@@ -160,7 +160,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 					ExcelFiles.write(budgets, outputStream);
 				}
 			}
-			@SuppressWarnings("resource")
+			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 			final PrintWriter writer = getStandardOutputWriter();
 			writer.println(String.format("Output written to \"%s\".", getOutput()));
 		}

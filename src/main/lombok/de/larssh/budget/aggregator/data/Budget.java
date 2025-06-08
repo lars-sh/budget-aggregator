@@ -49,6 +49,7 @@ public class Budget implements Comparable<Budget> {
 	private static final Comparator<Budget> COMPARATOR
 			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
+	@SuppressWarnings("checkstyle:XIllegalCatchDefault")
 	public static Set<Budget> of(final Csv csv) throws StringParseException {
 		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CsvFiles.HEADER_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {
