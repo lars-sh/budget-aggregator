@@ -1,4 +1,9 @@
 <?php
+// TODO: Dateinamen beim Export an die eingehenden Dateinamen anpassen (zumindest wenn nur eine Datei hochgeladen wird)
+// TODO: Beim Re-Import Haushaltsjahr korrekt erkennen
+// TODO: Beim Re-Import Kommentare kopieren
+// TODO: Beim Re-Import das Vorzeichen korrekt behandeln (dafür ggf. erkennen, was für eine Art Datei importiert wird)
+// TODO: Dateinamen in Exporten korrekt wiedergeben (zumindest zum Teil!)
 define('DEBUG', true); // TODO: false
 
 ini_set('html_errors', false);
@@ -45,7 +50,7 @@ if ($isPostRequest) {
 
 	if (count($sources) === 0) {
 		http_response_code(400);
-		$message = 'Mindestens eine Datei muss hochgeladen werden.';
+		$message = 'Sie müssen mindestens eine Datei zum Hochladen auswählen.';
 	} else {
 		$exit = false;
 		try {
@@ -123,16 +128,16 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
 		<div class="content">
 			<h1>Budget Aggregator</h1>
 			<p class="lead">Der Budget Aggregator liest Excel-Exporte der Software „CIP kommunal“ ein und bereitet sie in echter Tabellenform auf, um das Erstellen von Auswertungen zu erleichtern.</p>
-			<p>Dabei kann sie mehrere Exporte zusammenfassen und somit Übersichten über viele Jahre erzeugen. Zugleich erstellt sie eine separate Tabelle als Übersicht der Produkte.</p>
-			<p>Unterstützt werden Ergebnispläne und -rechnungen genauso wie Teilfinanzpläne und -rechnungen. Unerwartete Registerkarten werden ignoriert.</p>
+			<p>Dabei kann es mehrere Exporte zusammenfassen und somit Übersichten über viele Jahre erzeugen. Zugleich erstellt es eine separate Tabelle als Übersicht der Produkte. Unterstützt werden Ergebnispläne und -rechnungen genauso wie Teilfinanzpläne und -rechnungen. Unerwartete Registerkarten werden ignoriert.</p>
+			<p style="font-size: 80%;">Dieser Dienst wird ohne Gewähr bereitgestellt von <a href="https://lars-sh.de/" target="_blank">Lars Knickrehm</a>. Die im Formular angegebenen Daten werden nur für die Verarbeitung der Anfrage gespeichert und nach Bereitstellung des angeforderten Dokuments automatisch gelöscht. Dieser Dienst befindet sich derzeit im Aufbau. Das TLS-Zertifikat wird zu gegebener Zeit korrekt konfiguriert. Zudem ist der Re-Import von zuvor exportierten Excel-Dokumenten in seiner Funktionalität noch eingeschränkt.</p>
 
 			<h3>Dokumente aufbereiten</h3>
 			<?php echo $message === null ? '' : '<p class="warning">' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') .'</p>'; ?>
 
 			<form>
 				<p>
-					<label for="sources">Dateien hochladen</label>
-					<input accept=".csv,.xls,.xlsx" multiple="true" name="sources[]" id="sources" type="file" />
+					<label for="sources">Dateien hochladen*</label>
+					<input accept=".csv,.xls,.xlsx" multiple="true" name="sources[]" id="sources" required="true" type="file" />
 				</p>
 				<p>
 					<label for="filter-budget-types">Nach Haushaltstypen filtern</label>
@@ -167,13 +172,13 @@ echo '<?xml version="1.0" encoding="UTF-8" ?>';
 				</p>
 				<p>
 					<div></div>
-					<input formaction="" formenctype="multipart/form-data" formmethod="post" type="submit" value="Aufbereiten und herunterladen" />
+					<input formenctype="multipart/form-data" formmethod="post" type="submit" value="Aufbereiten und herunterladen" />
 				</p>
 			</form>
 		</div>
 		<div class="footer">
 			<span style="float: right;"><a href="impressum.html">Impressum</a></span>
-			© <a href="http://lars-sh.de/" target="_blank">Lars Knickrehm</a>
+			© <a href="https://lars-sh.de/" target="_blank">Lars Knickrehm</a>
 		</div>
 	</body>
 </html>
