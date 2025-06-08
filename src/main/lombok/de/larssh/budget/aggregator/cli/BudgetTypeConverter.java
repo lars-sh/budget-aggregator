@@ -8,6 +8,6 @@ import picocli.CommandLine.ITypeConverter;
 public class BudgetTypeConverter implements ITypeConverter<BudgetType> {
 	@Override
 	public BudgetType convert(@Nullable final String value) {
-		return BudgetType.of(Nullables.orElseThrow(value));
+		return BudgetType.of(Nullables.orElseThrow(value).trim());
 	}
 }
