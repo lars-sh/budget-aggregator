@@ -1,0 +1,21 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetAggregatorCli,259,0,32,0,56,0,32,0,16,0
+Budget Aggregator,de.larssh.budget.aggregator.cli,YearsConverter,86,0,6,0,11,0,8,0,5,0
+Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetTypeConverter,6,0,0,0,1,0,1,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.file,ExcelFiles,136,0,6,0,29,0,8,0,5,0
+Budget Aggregator,de.larssh.budget.aggregator.file,CsvFiles,63,0,0,0,13,0,3,0,3,0
+Budget Aggregator,de.larssh.budget.aggregator.file,ExcelFiles.SimplifiedCellStyle,34,0,0,0,2,0,1,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.file,CsvFiles.CsvFileWriter,196,0,8,0,28,0,9,0,5,0
+Budget Aggregator,de.larssh.budget.aggregator.file,ExcelFiles.ExcelFileWriter,1031,0,46,0,173,0,55,0,32,0
+Budget Aggregator,de.larssh.budget.aggregator.utils,Workbooks,25,0,6,0,7,0,4,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.utils,Comparators,49,0,6,0,7,0,7,0,4,0
+Budget Aggregator,de.larssh.budget.aggregator.utils,CellValues,257,0,31,0,30,0,30,0,10,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Budget,352,0,50,0,75,0,39,0,14,0
+Budget Aggregator,de.larssh.budget.aggregator.data,BudgetReference,48,0,0,0,2,0,1,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.data,BudgetType,94,0,12,0,20,0,10,0,4,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Balance,11,0,0,0,2,0,2,0,2,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Budgets,173,0,20,0,25,0,24,0,14,0
+Budget Aggregator,de.larssh.budget.aggregator.data,AccountType,85,0,6,0,9,0,5,0,2,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Municipality,38,0,4,0,7,0,5,0,3,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Product,61,0,8,0,12,0,7,0,3,0
+Budget Aggregator,de.larssh.budget.aggregator.data,Account,79,0,4,0,11,0,8,0,6,0
