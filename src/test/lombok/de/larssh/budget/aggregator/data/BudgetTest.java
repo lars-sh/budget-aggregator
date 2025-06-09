@@ -8,9 +8,9 @@ import lombok.NoArgsConstructor;
 /**
  * {@link Budget}
  */
-@PackagePrivate
 @NoArgsConstructor
-class BudgetTest {
+@SuppressWarnings("java:S5786")
+public class BudgetTest {
 	@Test
 	@PackagePrivate
 	void test() {
