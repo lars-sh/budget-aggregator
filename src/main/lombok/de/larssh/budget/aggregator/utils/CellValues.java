@@ -54,7 +54,11 @@ public class CellValues {
 		}
 	}
 
-	@SuppressWarnings({ "checkstyle:SuppressWarnings", "PMD.CyclomaticComplexity", "resource" })
+	@SuppressWarnings({
+			"checkstyle:SuppressWarnings",
+			"PMD.CyclomaticComplexity",
+			"PMD.ExhaustiveSwitchHasDefault",
+			"resource" })
 	public static CellValue create(@Nullable final Cell cell, final boolean evaluateFormula) {
 		if (cell == null) {
 			return new CellValue("");
@@ -101,6 +105,7 @@ public class CellValues {
 				: Optional.empty();
 	}
 
+	@SuppressWarnings("PMD.ExhaustiveSwitchHasDefault")
 	public static String getAsString(final CellValue value) {
 		switch (value.getCellType()) {
 		case BOOLEAN:
