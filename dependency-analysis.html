@@ -87,6 +87,14 @@
 <th>Type</th>
 <th>Optional</th></tr>
 <tr class="b">
+<td>info.picocli</td>
+<td>picocli</td>
+<td>4.7.7</td>
+<td>compile</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
+<tr class="a">
 <td>org.apache.poi</td>
 <td>poi</td>
 <td>5.4.1</td>
@@ -94,7 +102,7 @@
 <td>-</td>
 <td>jar</td>
 <td>false</td></tr>
-<tr class="a">
+<tr class="b">
 <td>org.apache.poi</td>
 <td>poi-ooxml</td>
 <td>5.4.1</td>
@@ -102,11 +110,19 @@
 <td>-</td>
 <td>jar</td>
 <td>false</td></tr>
+<tr class="a">
+<td>org.apache.poi</td>
+<td>poi-ooxml-lite</td>
+<td>5.4.1</td>
+<td>compile</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
 <tr class="b">
-<td>org.junit.jupiter</td>
-<td>junit-jupiter-api</td>
-<td>5.12.0</td>
-<td>test</td>
+<td>de.lars-sh</td>
+<td>utils-annotations</td>
+<td>0.9.17</td>
+<td>provided</td>
 <td>-</td>
 <td>jar</td>
 <td>false</td></tr>
@@ -119,30 +135,6 @@
 <td>jar</td>
 <td>false</td></tr>
 <tr class="b">
-<td>org.apache.logging.log4j</td>
-<td>log4j-core</td>
-<td>2.24.3</td>
-<td>compile</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
-<tr class="a">
-<td>org.apache.poi</td>
-<td>poi-ooxml-full</td>
-<td>5.4.1</td>
-<td>compile</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
-<tr class="b">
-<td>org.apache.poi</td>
-<td>poi-ooxml-lite</td>
-<td>5.4.1</td>
-<td>compile</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
-<tr class="a">
 <td>com.github.spotbugs</td>
 <td>spotbugs-annotations</td>
 <td>4.8.6</td>
@@ -150,19 +142,11 @@
 <td>-</td>
 <td>jar</td>
 <td>false</td></tr>
-<tr class="b">
-<td>info.picocli</td>
-<td>picocli</td>
-<td>4.7.7</td>
-<td>compile</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
 <tr class="a">
-<td>de.lars-sh</td>
-<td>utils-annotations</td>
-<td>0.9.17</td>
-<td>provided</td>
+<td>org.junit.jupiter</td>
+<td>junit-jupiter-api</td>
+<td>5.12.0</td>
+<td>test</td>
 <td>-</td>
 <td>jar</td>
 <td>false</td></tr>
@@ -185,9 +169,25 @@
 <th>Type</th>
 <th>Optional</th></tr>
 <tr class="b">
-<td>org.mockito</td>
-<td>mockito-core</td>
-<td>4.11.0</td>
+<td>org.apache.logging.log4j</td>
+<td>log4j-core</td>
+<td>2.24.3</td>
+<td>runtime</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
+<tr class="a">
+<td>org.apache.poi</td>
+<td>poi-ooxml-full</td>
+<td>5.4.1</td>
+<td>runtime</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
+<tr class="b">
+<td>de.lars-sh</td>
+<td>utils-test</td>
+<td>0.9.17</td>
 <td>test</td>
 <td>-</td>
 <td>jar</td>
@@ -201,25 +201,9 @@
 <td>jar</td>
 <td>false</td></tr>
 <tr class="b">
-<td>de.lars-sh</td>
-<td>utils-test</td>
-<td>0.9.17</td>
-<td>test</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
-<tr class="a">
 <td>org.jooq</td>
 <td>joor-java-8</td>
 <td>0.9.15</td>
-<td>test</td>
-<td>-</td>
-<td>jar</td>
-<td>false</td></tr>
-<tr class="b">
-<td>org.mockito</td>
-<td>mockito-inline</td>
-<td>4.11.0</td>
 <td>test</td>
 <td>-</td>
 <td>jar</td>
@@ -228,6 +212,22 @@
 <td>org.junit.jupiter</td>
 <td>junit-jupiter-engine</td>
 <td>5.12.0</td>
+<td>test</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
+<tr class="b">
+<td>org.mockito</td>
+<td>mockito-core</td>
+<td>4.11.0</td>
+<td>test</td>
+<td>-</td>
+<td>jar</td>
+<td>false</td></tr>
+<tr class="a">
+<td>org.mockito</td>
+<td>mockito-inline</td>
+<td>4.11.0</td>
 <td>test</td>
 <td>-</td>
 <td>jar</td>
