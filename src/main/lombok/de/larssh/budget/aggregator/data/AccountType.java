@@ -31,6 +31,7 @@ public enum AccountType {
 	INVEST_NEGATIVE(-1, 7_000_000, 8_000_000 - 1);
 
 	@PackagePrivate
+	@SuppressWarnings("PMD.ShortMethodName")
 	static Optional<AccountType> of(final int accountId) {
 		for (final AccountType accountType : values()) {
 			if (accountId >= accountType.getAccountIdMin() && accountId <= accountType.getAccountIdMax()) {

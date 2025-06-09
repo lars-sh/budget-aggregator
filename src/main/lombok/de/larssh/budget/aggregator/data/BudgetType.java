@@ -23,7 +23,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class BudgetType implements Comparable<BudgetType> {
+public final class BudgetType implements Comparable<BudgetType> {
 	private static final Map<String, BudgetType> CACHE = synchronizedMap(new HashMap<>());
 
 	private static final BudgetType IST = of("Ist");
@@ -48,6 +48,7 @@ public class BudgetType implements Comparable<BudgetType> {
 	private static final Comparator<BudgetType> COMPARATOR = COMPARATOR_DEFAULT_VALUES //
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(BudgetType::getName));
 
+	@SuppressWarnings("PMD.ShortMethodName")
 	public static BudgetType of(final String name) {
 		if (Strings.isBlank(name)) {
 			throw new IllegalArgumentException("The budget type name must not be blank.");

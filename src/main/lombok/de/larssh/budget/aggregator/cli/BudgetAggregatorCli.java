@@ -47,7 +47,7 @@ import picocli.CommandLine.Spec;
  */
 @Getter
 @RequiredArgsConstructor
-@SuppressWarnings("PMD.ExcessiveImports")
+@SuppressWarnings({ "PMD.DataClass", "PMD.ExcessiveImports" })
 @Command(name = "budget-aggregator",
 		mixinStandardHelpOptions = true,
 		showDefaultValues = true,
@@ -111,12 +111,19 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	@Override
 	public Integer call() throws IOException, StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
-
-		// Read Sources
 		for (final Path source : getSources()) {
 			budgets.addAll(Budgets.read(source));
 		}
 
+		applyFiltersAndHide(budgets);
+		sortAndHideDuplicates(budgets);
+		writeOutput(budgets);
+		openFile();
+
+		return ExitCode.OK;
+	}
+
+	private void applyFiltersAndHide(final List<Budget> budgets) {
 		// Apply Filters
 		if (!getFilterBudgetTypes().isEmpty()) {
 			budgets.removeIf(budget -> !getFilterBudgetTypes().contains(budget.getType()));
@@ -125,7 +132,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 			budgets.removeIf(budget -> !getFilterYears().contains(budget.getYear()));
 		}
 
-		// Hide Empty *
+		// Hide Empty Accounts/Balances/Budgets
 		if (isHideEmptyAccounts()) {
 			Budgets.removeEmptyAccounts(budgets);
 		}
@@ -135,7 +142,9 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		if (isHideEmptyBudgets()) {
 			Budgets.removeEmptyBudgets(budgets);
 		}
+	}
 
+	private void sortAndHideDuplicates(final List<Budget> budgets) {
 		// Sort Budgets
 		sort(budgets);
 
@@ -143,14 +152,11 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		if (isHideDuplicateBudgets()) {
 			Budgets.removeDuplicateBudgets(budgets);
 		}
+	}
 
-		// Write Output
-		if (!hasOutput() && !isOpenOutput()) {
-			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
-			final Writer writer = getStandardOutputWriter();
-			CsvFiles.write(budgets, writer);
-			writer.flush();
-		} else {
+	@SuppressWarnings("PMD.CloseResource")
+	private void writeOutput(final List<Budget> budgets) throws IOException {
+		if (hasOutput() || isOpenOutput()) {
 			if (Strings.endsWithIgnoreCaseAscii(getOutput().toString(), ".csv")) {
 				try (Writer writer = Files.newBufferedWriter(getOutput())) {
 					CsvFiles.write(budgets, writer);
@@ -160,24 +166,29 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 					ExcelFiles.write(budgets, outputStream);
 				}
 			}
+
 			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
 			final PrintWriter writer = getStandardOutputWriter();
 			writer.println(String.format("Output written to \"%s\".", getOutput()));
+		} else {
+			@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
+			final Writer writer = getStandardOutputWriter();
+			CsvFiles.write(budgets, writer);
+			writer.flush();
 		}
+	}
 
-		// Open File
+	private void openFile() throws IOException {
 		if (isOpenOutput() && Desktop.isDesktopSupported()) {
 			Desktop.getDesktop().open(getOutput().toFile());
 		}
-
-		return ExitCode.OK;
 	}
 
 	private CommandSpec getCommandSpec() {
 		return Nullables.orElseThrow(commandSpec);
 	}
 
-	private synchronized Path getOutput() throws IOException {
+	private Path getOutput() throws IOException {
 		if (Strings.isBlank(output.toString())) {
 			output = Files.createTempFile(getClass().getSimpleName() + "-", ".xlsx");
 		}

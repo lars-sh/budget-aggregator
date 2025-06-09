@@ -23,7 +23,7 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class Account implements Comparable<Account> {
+public final class Account implements Comparable<Account> {
 	private static final Pattern CELL_PATTERN = Pattern.compile("^\\s*(?<id>\\d+)\\s*(?<description>.*?)\\s*$");
 
 	private static final Comparator<Account> COMPARATOR = Comparator.comparing(Account::getProduct)
@@ -31,6 +31,7 @@ public class Account implements Comparable<Account> {
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(Account::getDescription));
 
 	@PackagePrivate
+	@SuppressWarnings({ "PMD.LooseCoupling", "PMD.ShortMethodName" })
 	static Optional<Account> of(final CsvRow row) {
 		final Optional<Product> product = Product.of(row);
 		if (!product.isPresent()) {
@@ -52,6 +53,7 @@ public class Account implements Comparable<Account> {
 	Product product;
 
 	@EqualsAndHashCode.Include
+	@SuppressWarnings("PMD.ShortVariable")
 	int id;
 
 	String description;

@@ -40,16 +40,21 @@ import lombok.experimental.NonFinal;
  */
 @Getter
 @ToString
+@SuppressWarnings("PMD.GodClass")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class Budget implements Comparable<Budget> {
+public final class Budget implements Comparable<Budget> {
 	private static final Pattern BUDGET_HEADER_PATTERN
 			= Pattern.compile("^\\s*(?<budgetType>.+?)\\s*((?<year>\\d+)|(?<yearBefore>Vorjahr))?\\s*$");
 
 	private static final Comparator<Budget> COMPARATOR
 			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
-	@SuppressWarnings("checkstyle:XIllegalCatchDefault")
+	@SuppressWarnings({
+			"checkstyle:XIllegalCatchDefault",
+			"PMD.AvoidCatchingGenericException",
+			"PMD.LooseCoupling",
+			"PMD.ShortMethodName" })
 	public static Set<Budget> of(final Csv csv) throws StringParseException {
 		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CsvFiles.HEADER_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {
@@ -73,6 +78,7 @@ public class Budget implements Comparable<Budget> {
 		return budgets.keySet();
 	}
 
+	@SuppressWarnings("PMD.LooseCoupling")
 	private static void addBalance(final Map<Budget, Budget> budgets,
 			final Account account,
 			final CsvRow row,
@@ -105,6 +111,7 @@ public class Budget implements Comparable<Budget> {
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
 
+	@SuppressWarnings("PMD.LooseCoupling")
 	private static OptionalInt determineYear(final CsvRow row, final Matcher columnHeaderMatcher) {
 		final String year = columnHeaderMatcher.group("year");
 		if (year != null) {

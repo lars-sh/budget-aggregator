@@ -13,8 +13,10 @@ import java.util.regex.Pattern;
 import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.SplitLimit;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.RequiredArgsConstructor;
 import picocli.CommandLine.ITypeConverter;
 
+@RequiredArgsConstructor
 public class YearsConverter implements ITypeConverter<Set<Integer>> {
 	private static final Pattern YEARS_PATTERN = Pattern.compile("^\\s*(?<from>\\d+)\\s*(-(?<to>\\d+))?\\s*$");
 
@@ -31,6 +33,7 @@ public class YearsConverter implements ITypeConverter<Set<Integer>> {
 						.collect(toSet());
 	}
 
+	@SuppressWarnings("PMD.ShortVariable")
 	private Set<Integer> convertSinglePattern(final String value) {
 		final Matcher matcher = Patterns.matches(YEARS_PATTERN, value)
 				.orElseThrow(

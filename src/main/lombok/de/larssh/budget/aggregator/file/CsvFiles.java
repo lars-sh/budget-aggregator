@@ -71,6 +71,7 @@ public class CsvFiles {
 		Writer writer;
 
 		@PackagePrivate
+		@SuppressWarnings("PMD.LooseCoupling")
 		void write() throws IOException {
 			final Set<Account> accounts = Budgets.getAccounts(budgets);
 
@@ -80,6 +81,7 @@ public class CsvFiles {
 			writer.write(csv.toString(SEPARATOR, ESCAPER));
 		}
 
+		@SuppressWarnings("PMD.LooseCoupling")
 		private void appendAccounts(final Csv csv, final Set<Account> accounts) {
 			// Headers
 			csv.add(new ArrayList<>(
@@ -95,6 +97,7 @@ public class CsvFiles {
 			}
 		}
 
+		@SuppressWarnings("PMD.LooseCoupling")
 		private void appendBudgets(final Csv csv, final Set<Account> accounts) {
 			for (final Budget budget : budgets) {
 				// Header

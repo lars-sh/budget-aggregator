@@ -66,6 +66,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
+@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports" })
 public class ExcelFiles {
 	static {
 		// Making sure that both Workbook Factories are registered to support XLS and
@@ -92,6 +93,7 @@ public class ExcelFiles {
 		return budgets;
 	}
 
+	@SuppressWarnings("PMD.LooseCoupling")
 	private static Csv readSheet(final Sheet sheet) {
 		final List<List<String>> data = new ArrayList<>();
 		final int lastRowIndex = sheet.getLastRowNum();
@@ -144,9 +146,17 @@ public class ExcelFiles {
 
 		private static final String SHEET_NAME_BALANCES = "Produkte";
 
-		private static final String COLUMN_NAME_COMMUNITY = "Gemeinde";
+		private static final String COLUMN_NAME_ACCOUNT = "Konto";
+
+		private static final String COLUMN_NAME_ACCOUNT_DESCRIPTION = "Kontobeschreibung";
 
 		private static final String COLUMN_NAME_BALANCE = "Produkt";
+
+		private static final String COLUMN_NAME_BALANCE_DESCRIPTION = "Produktbeschreibung";
+
+		private static final String COLUMN_NAME_COMMUNITY = "Gemeinde";
+
+		private static final String COLUMN_NAME_DESCRIPTION = "Beschreibung";
 
 		private static final String COLUMN_NAME_SUM = "Summieren";
 
@@ -164,9 +174,11 @@ public class ExcelFiles {
 
 			for (final Entry<BudgetReference, String> entry : budget.getReferences().entrySet()) {
 				if (comment.length() > 0) {
-					comment.append("\n");
+					comment.append('\n');
 				}
-				comment.append(String.format("%s: %s", entry.getKey().getDisplayValue(), entry.getValue()));
+				comment.append(entry.getKey().getDisplayValue()) //
+						.append(": ")
+						.append(entry.getValue());
 			}
 
 			if (comment.length() > 0) {
@@ -273,6 +285,16 @@ public class ExcelFiles {
 					Optional.empty(),
 					Cell::setCellValue,
 					Optional.of(value));
+		}
+
+		private Iterator<CTTableColumn> appendTotalsRow(final Row row, final CTTable table, final int emptyColumns) {
+			table.setTotalsRowCount(1);
+			final Iterator<CTTableColumn> columns = table.getTableColumns().getTableColumnList().iterator();
+			for (int i = 0; i < emptyColumns; i += 1) {
+				columns.next().setTotalsRowLabel("");
+				appendStrings(row, "");
+			}
+			return columns;
 		}
 
 		private Cell appendFormula(final Row row,
@@ -408,7 +430,7 @@ public class ExcelFiles {
 		private void appendProducts(final XSSFSheet sheet, final Set<Product> products) {
 			// Headers
 			appendStrings(appendRow(
-					sheet), COLUMN_NAME_COMMUNITY, COLUMN_NAME_BALANCE, "Beschreibung", COLUMN_NAME_SUM);
+					sheet), COLUMN_NAME_COMMUNITY, COLUMN_NAME_BALANCE, COLUMN_NAME_DESCRIPTION, COLUMN_NAME_SUM);
 
 			// Values
 			for (final Product product : products) {
@@ -434,40 +456,24 @@ public class ExcelFiles {
 							getSimplifiedCellStyle(budget),
 							DATA_FORMAT_CURRENCY,
 							String.format(
-									"SUMIFS(%1$s[%5$s], "
+									"SUMIFS(%1$s[%7$s], "
 											+ "%1$s[%3$s], %2$s[[#This Row],[%3$s]], "
-											+ "%1$s[Produktbeschreibung], %2$s[[#This Row],[Beschreibung]], "
-											+ "%1$s[%4$s], TRUE)",
-									SHEET_NAME_ACCOUNTS,
-									SHEET_NAME_BALANCES,
-									COLUMN_NAME_BALANCE,
-									COLUMN_NAME_SUM,
-									getBudgetColumnName(budget)));
+											+ "%1$s[%4$s], %2$s[[#This Row],[%5$s]], "
+											+ "%1$s[%6$s], TRUE)",
+									SHEET_NAME_ACCOUNTS, // 1
+									SHEET_NAME_BALANCES, // 2
+									COLUMN_NAME_BALANCE, // 3
+									COLUMN_NAME_BALANCE_DESCRIPTION, // 4
+									COLUMN_NAME_DESCRIPTION, // 5
+									COLUMN_NAME_SUM, // 6
+									getBudgetColumnName(budget))); // 7
 					rowIndex += 1;
 				}
 			}
 		}
 
 		private void appendProductsTotalsRow(final Row row, final CTTable table) {
-			table.setTotalsRowCount(1);
-			final Iterator<CTTableColumn> columns = table.getTableColumns().getTableColumnList().iterator();
-
-			// Gemeinde
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Produkt
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Beschreibung
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Summieren
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
+			final Iterator<CTTableColumn> columns = appendTotalsRow(row, table, 4);
 			appendSumsForBudgets(row, columns);
 		}
 
@@ -490,9 +496,9 @@ public class ExcelFiles {
 			appendStrings(headerRow,
 					COLUMN_NAME_COMMUNITY,
 					COLUMN_NAME_BALANCE,
-					"Produktbeschreibung",
-					"Konto",
-					"Kontobeschreibung",
+					COLUMN_NAME_BALANCE_DESCRIPTION,
+					COLUMN_NAME_ACCOUNT,
+					COLUMN_NAME_ACCOUNT_DESCRIPTION,
 					COLUMN_NAME_SUM);
 
 			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_MUNICIPALITY).getColumnIndex(), true);
@@ -540,49 +546,7 @@ public class ExcelFiles {
 		}
 
 		private void appendAccountsTotalsRow(final Row row, final CTTable table) {
-			table.setTotalsRowCount(1);
-			final Iterator<CTTableColumn> columns = table.getTableColumns().getTableColumnList().iterator();
-
-			// Gemeinde
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Produkt
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Produktbeschreibung
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Konto
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Kontobeschreibung
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Summieren
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// GKZ
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Budget
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Bezeichnung Budget
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
-			// Bezeichnung Position
-			columns.next().setTotalsRowLabel("");
-			appendStrings(row, "");
-
+			final Iterator<CTTableColumn> columns = appendTotalsRow(row, table, 10);
 			appendSumsForBudgets(row, columns);
 		}
 
@@ -600,6 +564,7 @@ public class ExcelFiles {
 		}
 	}
 
+	@SuppressWarnings("PMD.UnnecessaryModifier")
 	private enum SimplifiedCellStyle {
 		BOLD,
 		ITALIC,

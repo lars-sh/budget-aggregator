@@ -25,12 +25,13 @@ import lombok.ToString;
 @ToString
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
-public class Municipality implements Comparable<Municipality> {
+public final class Municipality implements Comparable<Municipality> {
 	private static final Map<Integer, Municipality> CACHE = synchronizedMap(new HashMap<>());
 
 	private static final Comparator<Municipality> COMPARATOR = Comparator.comparingInt(Municipality::getId);
 
 	@PackagePrivate
+	@SuppressWarnings({ "PMD.LooseCoupling", "PMD.ShortMethodName", "PMD.ShortVariable" })
 	static Optional<Municipality> of(final CsvRow row) {
 		final Optional<String> id = row.get(CsvFiles.HEADER_MUNICIPALITY);
 		if (!id.isPresent() || Strings.isBlank(id.get())) {
@@ -41,6 +42,7 @@ public class Municipality implements Comparable<Municipality> {
 	}
 
 	@EqualsAndHashCode.Include
+	@SuppressWarnings("PMD.ShortVariable")
 	int id;
 
 	@Override

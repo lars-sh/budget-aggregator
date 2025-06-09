@@ -21,7 +21,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class CellValues {
-	@SuppressWarnings("checkstyle:ConstantName")
+	@SuppressWarnings({ "checkstyle:ConstantName", "PMD.FieldNamingConventions" })
 	public static final CellValue _NONE = create(CellType._NONE, 0, false, null, 0);
 
 	public static final CellValue BLANK = create(CellType.BLANK, 0, false, null, 0);
@@ -30,7 +30,11 @@ public class CellValues {
 
 	private static final Map<Workbook, FormulaEvaluator> FORMULA_EVALUATORS = new WeakHashMap<>();
 
-	@SuppressWarnings({ "java:S112", "java:S3011" })
+	@SuppressWarnings({
+			"java:S112",
+			"java:S3011",
+			"PMD.AvoidAccessibilityAlteration",
+			"PMD.AvoidThrowingRawExceptionTypes" })
 	private CellValue create(final CellType cellType,
 			final double numberValue,
 			final boolean booleanValue,
@@ -46,7 +50,7 @@ public class CellValues {
 		}
 	}
 
-	@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "PMD.CyclomaticComplexity", "resource" })
 	public static CellValue create(@Nullable final Cell cell, final boolean evaluateFormula) {
 		if (cell == null) {
 			return new CellValue("");

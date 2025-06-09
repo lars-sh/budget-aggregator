@@ -9,7 +9,7 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class Workbooks {
-	@SuppressWarnings({ "checkstyle:SuppressWarnings", "resource" })
+	@SuppressWarnings({ "checkstyle:SuppressWarnings", "PMD.SimplifyBooleanReturns", "resource" })
 	public static boolean isUsing1904DateWindowing(final Workbook workbook) {
 		if (workbook instanceof HSSFWorkbook) {
 			return ((HSSFWorkbook) workbook).getInternalWorkbook().isUsing1904DateWindowing();
