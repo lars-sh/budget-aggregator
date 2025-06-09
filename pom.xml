@@ -65,6 +65,7 @@
 			<groupId>org.apache.logging.log4j</groupId>
 			<artifactId>log4j-core</artifactId>
 			<version>2.24.3</version>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.poi</groupId>
@@ -85,22 +86,7 @@
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-ooxml-full</artifactId>
 			<version>5.4.1</version>
+			<scope>runtime</scope>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<artifactId>maven-dependency-plugin</artifactId>
-					<configuration>
-						<usedDependencies combine.children="append">
-							<usedDependency>org.apache.logging.log4j:log4j-core</usedDependency>
-							<usedDependency>org.apache.poi:poi-ooxml-full</usedDependency>
-						</usedDependencies>
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
-	</build>
 </project>
