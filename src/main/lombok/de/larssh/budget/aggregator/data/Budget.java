@@ -115,6 +115,7 @@ public final class Budget implements Comparable<Budget> {
 	}
 
 	@SuppressWarnings("PMD.LooseCoupling")
+	@SuppressFBWarnings(value = "OCP_OVERLY_CONCRETE_PARAMETER", justification = "only valid for Java 20 and later")
 	private static OptionalInt determineYear(final CsvRow row, final Matcher columnHeaderMatcher) {
 		final String year = columnHeaderMatcher.group("year");
 		if (year != null) {
