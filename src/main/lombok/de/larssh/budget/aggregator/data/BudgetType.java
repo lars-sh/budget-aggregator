@@ -13,6 +13,7 @@ import java.util.Set;
 import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,6 +28,8 @@ public final class BudgetType implements Comparable<BudgetType> {
 	private static final Map<String, BudgetType> CACHE = synchronizedMap(new HashMap<>());
 
 	private static final BudgetType IST = of("Ist");
+
+	private static final String NAME_ERGEBNIS = "Ergebnis";
 
 	private static final Set<BudgetType> DEFAULT_VALUES = unmodifiableSet(new LinkedHashSet<>(Arrays.asList(//
 			of("Plan"),
@@ -49,11 +52,13 @@ public final class BudgetType implements Comparable<BudgetType> {
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(BudgetType::getName));
 
 	@SuppressWarnings("PMD.ShortMethodName")
+	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING",
+			justification = "no relevant information available here")
 	public static BudgetType of(final String name) {
 		if (Strings.isBlank(name)) {
 			throw new IllegalArgumentException("The budget type name must not be blank.");
 		}
-		if (name.equals("Ergebnis")) {
+		if (NAME_ERGEBNIS.equals(name)) {
 			return IST;
 		}
 		return CACHE.computeIfAbsent(name, BudgetType::new);

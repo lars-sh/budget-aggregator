@@ -28,6 +28,7 @@ import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.StringParseException;
 import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,6 +56,8 @@ public final class Budget implements Comparable<Budget> {
 			"PMD.AvoidCatchingGenericException",
 			"PMD.LooseCoupling",
 			"PMD.ShortMethodName" })
+	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING",
+			justification = "false-positive, using StringFormatter here")
 	public static Set<Budget> of(final Csv csv) throws StringParseException {
 		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CsvFiles.HEADER_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {

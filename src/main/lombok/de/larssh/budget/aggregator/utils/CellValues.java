@@ -17,6 +17,7 @@ import org.apache.poi.ss.usermodel.FormulaEvaluator;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -35,6 +36,9 @@ public class CellValues {
 			"java:S3011",
 			"PMD.AvoidAccessibilityAlteration",
 			"PMD.AvoidThrowingRawExceptionTypes" })
+	@SuppressFBWarnings(
+			value = { "EXS_EXCEPTION_SOFTENING_NO_CONSTRAINTS", "RFI_SET_ACCESSIBLE", "WEM_WEAK_EXCEPTION_MESSAGING" },
+			justification = "correct; not nice but required; no relevant information available here")
 	private CellValue create(final CellType cellType,
 			final double numberValue,
 			final boolean booleanValue,
@@ -90,6 +94,7 @@ public class CellValues {
 				.evaluate(cell);
 	}
 
+	@SuppressFBWarnings(value = "OPM_OVERLY_PERMISSIVE_METHOD", justification = "API method")
 	public static Optional<LocalDateTime> getLocalDateTime(final CellValue value) {
 		return isDate(value)
 				? Optional.of(DateUtil.getLocalDateTime(value.getNumberValue(), value.getBooleanValue()))
@@ -121,6 +126,7 @@ public class CellValues {
 		}
 	}
 
+	@SuppressFBWarnings(value = "OPM_OVERLY_PERMISSIVE_METHOD", justification = "API method")
 	public static boolean isDate(final CellValue value) {
 		return value.getCellType() == CellType.NUMERIC && DATE_STRING_VALUE.equals(value.getStringValue());
 	}

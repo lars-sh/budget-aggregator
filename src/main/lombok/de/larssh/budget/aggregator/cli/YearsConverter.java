@@ -44,8 +44,8 @@ public class YearsConverter implements ITypeConverter<Set<Integer>> {
 			return singleton(from);
 		}
 
-		final Set<Integer> years = new HashSet<>();
 		final int to = Integer.parseInt(matcher.group(YEARS_PATTERN_TO));
+		final Set<Integer> years = new HashSet<>(to - from + 1);
 		for (int year = from; year <= to; year += 1) {
 			years.add(year);
 		}

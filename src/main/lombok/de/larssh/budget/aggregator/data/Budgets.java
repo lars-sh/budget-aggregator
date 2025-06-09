@@ -26,7 +26,7 @@ public class Budgets {
 				.collect(toCollection(TreeSet::new));
 	}
 
-	public static Set<Product> getProducts(final List<Budget> budgets) {
+	public static Set<Product> getProducts(final Collection<Budget> budgets) {
 		return budgets.stream()
 				.flatMap(budget -> budget.getBalances().keySet().stream())
 				.map(Account::getProduct)

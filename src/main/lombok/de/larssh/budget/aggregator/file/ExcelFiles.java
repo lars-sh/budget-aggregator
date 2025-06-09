@@ -18,6 +18,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiConsumer;
 
@@ -57,6 +58,7 @@ import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.budget.aggregator.data.Product;
 import de.larssh.budget.aggregator.utils.CellValues;
 import de.larssh.utils.Nullables;
+import de.larssh.utils.OptionalInts;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.collection.Maps;
 import de.larssh.utils.text.Csv;
@@ -85,7 +87,9 @@ public class ExcelFiles {
 				final Sheet sheet = workbook.getSheetAt(sheetIndex);
 
 				final Set<Budget> sheetBudgets = Budget.of(readSheet(sheet));
-				Budgets.setReference(sheetBudgets, BudgetReference.FILE_NAME, source.getFileName().toString());
+				Budgets.setReference(sheetBudgets,
+						BudgetReference.FILE_NAME,
+						Nullables.orElseThrow(source.getFileName()).toString());
 				Budgets.setReference(sheetBudgets, BudgetReference.SHEET, sheet.getSheetName());
 				budgets.addAll(sheetBudgets);
 			}
@@ -95,18 +99,22 @@ public class ExcelFiles {
 
 	@SuppressWarnings("PMD.LooseCoupling")
 	private static Csv readSheet(final Sheet sheet) {
-		final List<List<String>> data = new ArrayList<>();
 		final int lastRowIndex = sheet.getLastRowNum();
-		for (int rowIndex = sheet.getFirstRowNum(); rowIndex <= lastRowIndex; rowIndex += 1) {
+		final int firstRowIndex = sheet.getFirstRowNum();
+
+		final List<List<String>> data = new ArrayList<>(lastRowIndex - firstRowIndex + 1);
+		for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex += 1) {
 			data.add(readRow(sheet.getRow(rowIndex)));
 		}
 		return new Csv(data);
 	}
 
 	private static List<String> readRow(final Row row) {
-		final List<String> cells = new ArrayList<>();
 		final int lastCellIndex = row.getLastCellNum();
-		for (int cellIndex = row.getFirstCellNum(); cellIndex <= lastCellIndex; cellIndex += 1) {
+		final int firstCellIndex = row.getFirstCellNum();
+
+		final List<String> cells = new ArrayList<>(lastCellIndex - firstCellIndex + 1);
+		for (int cellIndex = firstCellIndex; cellIndex <= lastCellIndex; cellIndex += 1) {
 			cells.add(CellValues.getAsString(CellValues.create(row.getCell(cellIndex), true)));
 		}
 		return cells;
@@ -308,8 +316,12 @@ public class ExcelFiles {
 					Optional.of(formula));
 		}
 
-		private Cell appendNumber(final Row row, final Optional<? extends Number> value) {
-			return appendCell(row, SimplifiedCellStyle.NORMAL, Optional.empty(), ExcelFileWriter::setCellValue, value);
+		private Cell appendNumber(final Row row, final OptionalInt value) {
+			return appendCell(row,
+					SimplifiedCellStyle.NORMAL,
+					Optional.empty(),
+					ExcelFileWriter::setCellValue,
+					OptionalInts.boxed(value));
 		}
 
 		private Cell appendNumber(final Row row,
@@ -427,7 +439,7 @@ public class ExcelFiles {
 			appendProductsTotalsRow(appendRow(sheet), table.getCTTable());
 		}
 
-		private void appendProducts(final XSSFSheet sheet, final Set<Product> products) {
+		private void appendProducts(final Sheet sheet, final Set<Product> products) {
 			// Headers
 			appendStrings(appendRow(
 					sheet), COLUMN_NAME_COMMUNITY, COLUMN_NAME_BALANCE, COLUMN_NAME_DESCRIPTION, COLUMN_NAME_SUM);
@@ -435,8 +447,8 @@ public class ExcelFiles {
 			// Values
 			for (final Product product : products) {
 				final Row row = appendRow(sheet);
-				appendNumber(row, Optional.of(product.getMunicipality().getId()));
-				appendNumber(row, Optional.of(product.getId()));
+				appendNumber(row, OptionalInt.of(product.getMunicipality().getId()));
+				appendNumber(row, OptionalInt.of(product.getId()));
 				appendString(row, product.getDescription());
 				appendBoolean(row, true);
 			}
@@ -490,7 +502,7 @@ public class ExcelFiles {
 			appendAccountsTotalsRow(appendRow(sheet), table.getCTTable());
 		}
 
-		private void appendAccounts(final XSSFSheet sheet, final Set<Account> accounts) {
+		private void appendAccounts(final Sheet sheet, final Set<Account> accounts) {
 			// Headers
 			final Row headerRow = appendRow(sheet);
 			appendStrings(headerRow,
@@ -509,15 +521,15 @@ public class ExcelFiles {
 			// Values
 			for (final Account account : accounts) {
 				final Row row = appendRow(sheet);
-				appendNumber(row, Optional.of(account.getProduct().getMunicipality().getId()));
-				appendNumber(row, Optional.of(account.getProduct().getId()));
+				appendNumber(row, OptionalInt.of(account.getProduct().getMunicipality().getId()));
+				appendNumber(row, OptionalInt.of(account.getProduct().getId()));
 				appendString(row, account.getProduct().getDescription());
-				appendNumber(row, Optional.of(account.getId()));
+				appendNumber(row, OptionalInt.of(account.getId()));
 				appendString(row, account.getDescription());
 				appendBoolean(row, true);
 
-				appendNumber(row, Optional.of(account.getProduct().getMunicipality().getId()));
-				appendNumber(row, Optional.of(account.getProduct().getId()));
+				appendNumber(row, OptionalInt.of(account.getProduct().getMunicipality().getId()));
+				appendNumber(row, OptionalInt.of(account.getProduct().getId()));
 				appendString(row, account.getProduct().getDescription());
 				appendString(row, String.format("%d %s", account.getId(), account.getDescription()));
 			}

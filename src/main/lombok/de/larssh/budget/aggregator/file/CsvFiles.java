@@ -20,6 +20,7 @@ import de.larssh.budget.aggregator.data.Budget;
 import de.larssh.budget.aggregator.data.BudgetReference;
 import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.utils.Finals;
+import de.larssh.utils.Nullables;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.StringParseException;
@@ -46,7 +47,9 @@ public class CsvFiles {
 	public static Set<Budget> read(final Path source) throws IOException, StringParseException {
 		try (Reader reader = Files.newBufferedReader(source)) {
 			final Set<Budget> budgets = Budget.of(Csv.parse(reader, SEPARATOR, ESCAPER));
-			Budgets.setReference(budgets, BudgetReference.FILE_NAME, source.getFileName().toString());
+			Budgets.setReference(budgets,
+					BudgetReference.FILE_NAME,
+					Nullables.orElseThrow(source.getFileName()).toString());
 			return budgets;
 		}
 	}

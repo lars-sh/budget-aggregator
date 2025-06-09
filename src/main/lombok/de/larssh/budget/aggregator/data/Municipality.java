@@ -12,6 +12,7 @@ import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +32,8 @@ public final class Municipality implements Comparable<Municipality> {
 	private static final Comparator<Municipality> COMPARATOR = Comparator.comparingInt(Municipality::getId);
 
 	@PackagePrivate
+	@SuppressFBWarnings(value = "NAB_NEEDLESS_BOXING_VALUEOF",
+			justification = "false-positive, not boxing an int explicitly here")
 	@SuppressWarnings({ "PMD.LooseCoupling", "PMD.ShortMethodName", "PMD.ShortVariable" })
 	static Optional<Municipality> of(final CsvRow row) {
 		final Optional<String> id = row.get(CsvFiles.HEADER_MUNICIPALITY);
