@@ -20,9 +20,9 @@ import java.util.regex.Pattern;
 
 import org.apache.poi.ss.util.CellReference;
 
-import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.budget.aggregator.sheets.Row;
 import de.larssh.budget.aggregator.sheets.Sheet;
+import de.larssh.budget.aggregator.sheets.csv.CsvFiles;
 import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.StringParseException;
 import de.larssh.utils.text.Strings;
@@ -54,19 +54,22 @@ public final class Budget implements Comparable<Budget> {
 	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING",
 			justification = "false-positive, using StringFormatter here")
 	public static Set<Budget> of(final Sheet sheet) throws StringParseException {
-		final int lastNonBalanceColumn = sheet.getHeader().indexOf(CsvFiles.HEADER_ACCOUNT);
+		final int lastNonBalanceColumn = sheet.getHeader().indexOf(CsvFiles.COLUMN_NAME_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {
 			return emptySet();
 		}
 
+		final boolean applyBudgetTypeSign = sheet.isApplyBudgetTypeSign();
 		final Map<Budget, Budget> budgets = new LinkedHashMap<>();
 		for (final Row row : sheet.getRows()) {
 			try {
 				final Optional<Account> account = Account.of(row);
 				if (account.isPresent()) {
+					final boolean negate = applyBudgetTypeSign && account.get().getType().getSign() < 0;
+
 					final int headerSize = sheet.getHeader().size();
 					for (int columnIndex = lastNonBalanceColumn + 1; columnIndex < headerSize; columnIndex += 1) {
-						addBalance(budgets, account.get(), row, sheet, columnIndex);
+						addBalance(budgets, account.get(), negate, row, sheet, columnIndex);
 					}
 				}
 			} catch (final Exception e) {
@@ -76,8 +79,10 @@ public final class Budget implements Comparable<Budget> {
 		return budgets.keySet();
 	}
 
+	@SuppressWarnings("PMD.CompareObjectsWithEquals")
 	private static void addBalance(final Map<Budget, Budget> budgets,
 			final Account account,
+			final boolean negate,
 			final Row row,
 			final Sheet sheet,
 			final int columnIndex) {
@@ -98,12 +103,22 @@ public final class Budget implements Comparable<Budget> {
 		}
 
 		final BudgetType budgetType = BudgetType.of(columnHeaderMatcher.get().group("budgetType"));
-		final Budget budget = new Budget(year.getAsInt(), budgetType);
-		row.get(CsvFiles.HEADER_BUDGET_YEAR).ifPresent(y -> budget.setReference(BudgetReference.BUDGET_YEAR, y));
-		budget.setReference(BudgetReference.COLUMN, CellReference.convertNumToColString(columnIndex));
+		final Budget newBudget = new Budget(year.getAsInt(), budgetType);
+		final Budget budget = budgets.computeIfAbsent(newBudget, Function.identity());
 
-		final Balance balance = new Balance(account, determineValue(cellValue, account));
-		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
+		final Balance balance = new Balance(account, determineValue(cellValue, negate));
+		budget.balances.put(account, balance);
+
+		// Add References
+		if (budget == newBudget) {
+			sheet.getHeaderReferences()
+					.get(columnIndex)
+					.entrySet()
+					.forEach(entry -> budget.setReferenceIfAbsent(entry.getKey(), entry.getValue()));
+		}
+		row.get(CsvFiles.COLUMN_NAME_BUDGET_YEAR)
+				.ifPresent(y -> budget.setReferenceIfAbsent(BudgetReference.BUDGET_YEAR, y));
+		budget.setReferenceIfAbsent(BudgetReference.COLUMN, CellReference.convertNumToColString(columnIndex));
 	}
 
 	@SuppressFBWarnings(value = "OCP_OVERLY_CONCRETE_PARAMETER", justification = "only valid for Java 20 and later")
@@ -113,7 +128,7 @@ public final class Budget implements Comparable<Budget> {
 			return OptionalInt.of(Integer.parseInt(year));
 		}
 
-		final Optional<String> yearCell = row.get(CsvFiles.HEADER_BUDGET_YEAR);
+		final Optional<String> yearCell = row.get(CsvFiles.COLUMN_NAME_BUDGET_YEAR);
 		if (!yearCell.isPresent() || Strings.isBlank(yearCell.get())) {
 			return OptionalInt.empty();
 		}
@@ -122,9 +137,9 @@ public final class Budget implements Comparable<Budget> {
 		return OptionalInt.of(Integer.parseInt(yearCell.get()) + offsetYears);
 	}
 
-	private static BigDecimal determineValue(final String cellValue, final Account account) {
+	private static BigDecimal determineValue(final String cellValue, final boolean negate) {
 		final BigDecimal number = new BigDecimal(cellValue);
-		return account.getType().getSign() < 0 ? number.negate() : number;
+		return negate ? number.negate() : number;
 	}
 
 	@EqualsAndHashCode.Include
@@ -189,11 +204,11 @@ public final class Budget implements Comparable<Budget> {
 		return count;
 	}
 
-	public void setReference(final BudgetReference reference, final String value) {
+	public void setReferenceIfAbsent(final BudgetReference reference, final String value) {
 		if (!modifiable) {
 			throw new UnsupportedOperationException();
 		}
-		references.put(reference, value);
+		references.putIfAbsent(reference, value);
 	}
 
 	public Budget unmodifiable() {

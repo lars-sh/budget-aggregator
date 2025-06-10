@@ -30,6 +30,7 @@ public class Budgets {
 				.collect(toCollection(TreeSet::new));
 	}
 
+	@SuppressWarnings("PMD.ShortMethodName")
 	public static List<Budget> of(final SheetsFile sheetsFile) throws StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
 		for (final Sheet sheet : sheetsFile.getSheets()) {
@@ -38,8 +39,8 @@ public class Budgets {
 
 			// Add References
 			sheetsFile.getFileName()
-					.ifPresent(fileName -> Budgets.setReference(budget, BudgetReference.FILE_NAME, fileName));
-			sheet.getName().ifPresent(sheetName -> Budgets.setReference(budget, BudgetReference.SHEET, sheetName));
+					.ifPresent(fileName -> setReferenceIfAbsent(budget, BudgetReference.FILE_NAME, fileName));
+			sheet.getName().ifPresent(sheetName -> setReferenceIfAbsent(budget, BudgetReference.SHEET, sheetName));
 		}
 		return budgets;
 	}
@@ -82,9 +83,11 @@ public class Budgets {
 				.allMatch(balance -> balance.getValue().compareTo(BigDecimal.ZERO) == 0));
 	}
 
-	public static void setReference(final Set<Budget> budgets, final BudgetReference reference, final String value) {
+	private static void setReferenceIfAbsent(final Set<Budget> budgets,
+			final BudgetReference reference,
+			final String value) {
 		for (final Budget budget : budgets) {
-			budget.setReference(reference, value);
+			budget.setReferenceIfAbsent(reference, value);
 		}
 	}
 }

@@ -3,7 +3,6 @@ package de.larssh.budget.aggregator.data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-@Getter
 @RequiredArgsConstructor
 public enum BudgetReference {
 	BUDGET_YEAR("Haushaltsjahr"),
@@ -11,5 +10,6 @@ public enum BudgetReference {
 	SHEET("Registerkarte"),
 	COLUMN("Spalte");
 
+	@Getter
 	String displayValue;
 }

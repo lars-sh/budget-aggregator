@@ -4,8 +4,8 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
-import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.budget.aggregator.sheets.Row;
+import de.larssh.budget.aggregator.sheets.csv.CsvFiles;
 import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Patterns;
@@ -38,7 +38,7 @@ public final class Account implements Comparable<Account> {
 			return Optional.empty();
 		}
 
-		final Optional<String> accountCell = row.get(CsvFiles.HEADER_ACCOUNT);
+		final Optional<String> accountCell = row.get(CsvFiles.COLUMN_NAME_ACCOUNT);
 		if (!accountCell.isPresent()) {
 			return Optional.empty();
 		}

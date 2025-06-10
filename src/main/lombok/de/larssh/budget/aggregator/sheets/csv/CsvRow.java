@@ -9,25 +9,26 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @PackagePrivate
 class CsvRow implements Row {
-	de.larssh.utils.text.CsvRow csvRow;
+	@SuppressWarnings("PMD.LooseCoupling")
+	de.larssh.utils.text.CsvRow row;
 
 	@Override
 	public Optional<String> get(final int index) {
-		return index < csvRow.size() ? Optional.of(csvRow.get(index)) : Optional.empty();
+		return index < row.size() ? Optional.of(row.get(index)) : Optional.empty();
 	}
 
 	@Override
 	public Optional<String> get(final String header) {
-		return csvRow.get(header);
+		return row.get(header);
 	}
 
 	@Override
 	public int getRowIndex() {
-		return csvRow.getRowIndex();
+		return row.getRowIndex();
 	}
 
 	@Override
 	public int size() {
-		return csvRow.size();
+		return row.size();
 	}
 }

@@ -1,4 +1,4 @@
-package de.larssh.budget.aggregator.file;
+package de.larssh.budget.aggregator.sheets.excel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +55,8 @@ import de.larssh.budget.aggregator.data.BudgetReference;
 import de.larssh.budget.aggregator.data.BudgetType;
 import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.budget.aggregator.data.Product;
-import de.larssh.budget.aggregator.sheets.excel.ExcelSheets;
+import de.larssh.budget.aggregator.sheets.csv.CsvFiles;
+import de.larssh.utils.Finals;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.OptionalInts;
 import de.larssh.utils.annotations.PackagePrivate;
@@ -66,8 +67,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings("PMD.ExcessiveImports")
+@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports" })
 public class ExcelFiles {
+	/**
+	 * Remark: {@link ExcelSheet#isApplyBudgetTypeSign()} requires this constant to
+	 * differ from {@link CsvFiles#COLUMN_NAME_MUNICIPALITY}.
+	 */
+	@PackagePrivate
+	static final String COLUMN_NAME_MUNICIPALITY = Finals.constant("Gemeinde");
+
 	static {
 		// Making sure that both Workbook Factories are registered to support XLS and
 		// XLSX. Registering automatically might be a problem when creating a JAR with
@@ -116,19 +124,17 @@ public class ExcelFiles {
 
 		private static final String SHEET_NAME_ACCOUNTS = "Konten";
 
-		private static final String SHEET_NAME_BALANCES = "Produkte";
+		private static final String SHEET_NAME_PRODUCTS = "Produkte";
 
 		private static final String COLUMN_NAME_ACCOUNT = "Konto";
 
 		private static final String COLUMN_NAME_ACCOUNT_DESCRIPTION = "Kontobeschreibung";
 
-		private static final String COLUMN_NAME_BALANCE = "Produkt";
-
-		private static final String COLUMN_NAME_BALANCE_DESCRIPTION = "Produktbeschreibung";
-
-		private static final String COLUMN_NAME_COMMUNITY = "Gemeinde";
-
 		private static final String COLUMN_NAME_DESCRIPTION = "Beschreibung";
+
+		private static final String COLUMN_NAME_PRODUCT = "Produkt";
+
+		private static final String COLUMN_NAME_PRODUCT_DESCRIPTION = "Produktbeschreibung";
 
 		private static final String COLUMN_NAME_SUM = "Summieren";
 
@@ -362,7 +368,7 @@ public class ExcelFiles {
 			try (XSSFWorkbook workbook = new XSSFWorkbook()) {
 				workbook.setCellFormulaValidation(false);
 
-				writeProducts(workbook.createSheet(SHEET_NAME_BALANCES));
+				writeProducts(workbook.createSheet(SHEET_NAME_PRODUCTS));
 				writeAccounts(workbook.createSheet(SHEET_NAME_ACCOUNTS));
 
 				// Auto Size Columns
@@ -395,7 +401,7 @@ public class ExcelFiles {
 
 			// Table
 			sheet.createFreezePane(3, 0);
-			final XSSFTable table = createTable(sheet, SHEET_NAME_BALANCES);
+			final XSSFTable table = createTable(sheet, SHEET_NAME_PRODUCTS);
 			table.getCTTable().getTableStyleInfo().setShowRowStripes(true);
 
 			// Totals Row
@@ -406,7 +412,7 @@ public class ExcelFiles {
 		private void appendProducts(final Sheet sheet, final Set<Product> products) {
 			// Headers
 			appendStrings(appendRow(
-					sheet), COLUMN_NAME_COMMUNITY, COLUMN_NAME_BALANCE, COLUMN_NAME_DESCRIPTION, COLUMN_NAME_SUM);
+					sheet), COLUMN_NAME_MUNICIPALITY, COLUMN_NAME_PRODUCT, COLUMN_NAME_DESCRIPTION, COLUMN_NAME_SUM);
 
 			// Values
 			for (final Product product : products) {
@@ -437,9 +443,9 @@ public class ExcelFiles {
 											+ "%1$s[%4$s], %2$s[[#This Row],[%5$s]], "
 											+ "%1$s[%6$s], TRUE)",
 									SHEET_NAME_ACCOUNTS, // 1
-									SHEET_NAME_BALANCES, // 2
-									COLUMN_NAME_BALANCE, // 3
-									COLUMN_NAME_BALANCE_DESCRIPTION, // 4
+									SHEET_NAME_PRODUCTS, // 2
+									COLUMN_NAME_PRODUCT, // 3
+									COLUMN_NAME_PRODUCT_DESCRIPTION, // 4
 									COLUMN_NAME_DESCRIPTION, // 5
 									COLUMN_NAME_SUM, // 6
 									getBudgetColumnName(budget))); // 7
@@ -470,17 +476,18 @@ public class ExcelFiles {
 			// Headers
 			final Row headerRow = appendRow(sheet);
 			appendStrings(headerRow,
-					COLUMN_NAME_COMMUNITY,
-					COLUMN_NAME_BALANCE,
-					COLUMN_NAME_BALANCE_DESCRIPTION,
+					COLUMN_NAME_MUNICIPALITY,
+					COLUMN_NAME_PRODUCT,
+					COLUMN_NAME_PRODUCT_DESCRIPTION,
 					COLUMN_NAME_ACCOUNT,
 					COLUMN_NAME_ACCOUNT_DESCRIPTION,
 					COLUMN_NAME_SUM);
 
-			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_MUNICIPALITY).getColumnIndex(), true);
-			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_PRODUCT_ID).getColumnIndex(), true);
-			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_PRODUCT_DESCRIPTION).getColumnIndex(), true);
-			sheet.setColumnHidden(appendString(headerRow, CsvFiles.HEADER_ACCOUNT).getColumnIndex(), true);
+			sheet.setColumnHidden(appendString(headerRow, CsvFiles.COLUMN_NAME_MUNICIPALITY).getColumnIndex(), true);
+			sheet.setColumnHidden(appendString(headerRow, CsvFiles.COLUMN_NAME_PRODUCT_ID).getColumnIndex(), true);
+			sheet.setColumnHidden(appendString(headerRow, CsvFiles.COLUMN_NAME_PRODUCT_DESCRIPTION).getColumnIndex(),
+					true);
+			sheet.setColumnHidden(appendString(headerRow, CsvFiles.COLUMN_NAME_ACCOUNT).getColumnIndex(), true);
 
 			// Values
 			for (final Account account : accounts) {
@@ -533,7 +540,7 @@ public class ExcelFiles {
 						getSimplifiedCellStyle(budget),
 						DATA_FORMAT_CURRENCY,
 						String.format("SUMIFS(%1$s[%3$s], %1$s[%2$s], TRUE)",
-								SHEET_NAME_BALANCES,
+								SHEET_NAME_PRODUCTS,
 								COLUMN_NAME_SUM,
 								getBudgetColumnName(budget)));
 			}

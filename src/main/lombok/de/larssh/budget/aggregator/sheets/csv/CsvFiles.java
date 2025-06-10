@@ -1,8 +1,9 @@
-package de.larssh.budget.aggregator.file;
+package de.larssh.budget.aggregator.sheets.csv;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
@@ -18,7 +19,6 @@ import de.larssh.budget.aggregator.data.Account;
 import de.larssh.budget.aggregator.data.Balance;
 import de.larssh.budget.aggregator.data.Budget;
 import de.larssh.budget.aggregator.data.Budgets;
-import de.larssh.budget.aggregator.sheets.csv.CsvSheets;
 import de.larssh.utils.Finals;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.annotations.PackagePrivate;
@@ -34,16 +34,17 @@ public class CsvFiles {
 
 	public static final char ESCAPER = Finals.constant('"');
 
-	public static final String HEADER_MUNICIPALITY = Finals.constant("GKZ");
+	public static final String COLUMN_NAME_MUNICIPALITY = Finals.constant("GKZ");
 
-	public static final String HEADER_BUDGET_YEAR = Finals.constant("HHJ");
+	public static final String COLUMN_NAME_BUDGET_YEAR = Finals.constant("HHJ");
 
-	public static final String HEADER_PRODUCT_ID = Finals.constant("Budget");
+	public static final String COLUMN_NAME_PRODUCT_ID = Finals.constant("Budget");
 
-	public static final String HEADER_PRODUCT_DESCRIPTION = Finals.constant("Bezeichnung Budget");
+	public static final String COLUMN_NAME_PRODUCT_DESCRIPTION = Finals.constant("Bezeichnung Budget");
 
-	public static final String HEADER_ACCOUNT = Finals.constant("Bezeichnung Position");
+	public static final String COLUMN_NAME_ACCOUNT = Finals.constant("Bezeichnung Position");
 
+	@SuppressWarnings("PMD.LooseCoupling")
 	public static List<Budget> read(final Path source) throws IOException, StringParseException {
 		try (Reader reader = Files.newBufferedReader(source)) {
 			final String fileName = Nullables.orElseThrow(source.getFileName()).toString();
@@ -85,8 +86,10 @@ public class CsvFiles {
 		@SuppressWarnings("PMD.LooseCoupling")
 		private void appendAccounts(final Csv csv, final Set<Account> accounts) {
 			// Headers
-			csv.add(new ArrayList<>(
-					Arrays.asList(HEADER_MUNICIPALITY, HEADER_PRODUCT_ID, HEADER_PRODUCT_DESCRIPTION, HEADER_ACCOUNT)));
+			csv.add(new ArrayList<>(Arrays.asList(COLUMN_NAME_MUNICIPALITY,
+					COLUMN_NAME_PRODUCT_ID,
+					COLUMN_NAME_PRODUCT_DESCRIPTION,
+					COLUMN_NAME_ACCOUNT)));
 
 			// Values
 			for (final Account account : accounts) {
@@ -109,7 +112,15 @@ public class CsvFiles {
 				final Map<Account, Balance> balances = budget.getBalances();
 				for (final Account account : accounts) {
 					final Balance balance = balances.get(account);
-					csv.get(rowIndex).add(balance == null ? "" : DECIMAL_FORMAT.get().format(balance.getValue()));
+					final String displayValue;
+					if (balance == null) {
+						displayValue = "";
+					} else {
+						final boolean negate = account.getType().getSign() < 0;
+						final BigDecimal value = balance.getValue();
+						displayValue = DECIMAL_FORMAT.get().format(negate ? value.negate() : value);
+					}
+					csv.get(rowIndex).add(displayValue);
 					rowIndex += 1;
 				}
 			}

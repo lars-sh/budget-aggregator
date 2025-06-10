@@ -1,11 +1,14 @@
 package de.larssh.budget.aggregator.sheets.csv;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
+import de.larssh.budget.aggregator.data.BudgetReference;
 import de.larssh.budget.aggregator.sheets.Sheet;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Csv;
@@ -17,12 +20,14 @@ import lombok.RequiredArgsConstructor;
 @PackagePrivate
 class CsvSheet implements Sheet {
 	@Getter(AccessLevel.PRIVATE)
+	@SuppressWarnings("PMD.LooseCoupling")
 	Csv csv;
 
 	@Getter
 	Collection<CsvRow> rows;
 
 	@PackagePrivate
+	@SuppressWarnings("PMD.LooseCoupling")
 	CsvSheet(final Csv csv) {
 		this.csv = csv;
 
@@ -38,8 +43,18 @@ class CsvSheet implements Sheet {
 	}
 
 	@Override
+	public List<Map<BudgetReference, String>> getHeaderReferences() {
+		return emptyList();
+	}
+
+	@Override
 	public Optional<String> getName() {
 		return Optional.empty();
+	}
+
+	@Override
+	public boolean isApplyBudgetTypeSign() {
+		return true;
 	}
 
 	@Override

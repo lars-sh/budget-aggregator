@@ -17,6 +17,7 @@ public class CsvSheets implements SheetsFile {
 	@Getter
 	Iterable<CsvSheet> sheets;
 
+	@SuppressWarnings("PMD.LooseCoupling")
 	public CsvSheets(final String fileName, final Csv csv) {
 		this.fileName = Optional.of(fileName);
 		sheets = singleton(new CsvSheet(csv));

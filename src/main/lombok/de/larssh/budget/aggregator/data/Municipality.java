@@ -7,8 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-import de.larssh.budget.aggregator.file.CsvFiles;
 import de.larssh.budget.aggregator.sheets.Row;
+import de.larssh.budget.aggregator.sheets.csv.CsvFiles;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
@@ -36,7 +36,7 @@ public final class Municipality implements Comparable<Municipality> {
 			justification = "false-positive, not boxing an int explicitly here")
 	@SuppressWarnings({ "PMD.ShortMethodName", "PMD.ShortVariable" })
 	static Optional<Municipality> of(final Row row) {
-		final Optional<String> id = row.get(CsvFiles.HEADER_MUNICIPALITY);
+		final Optional<String> id = row.get(CsvFiles.COLUMN_NAME_MUNICIPALITY);
 		if (!id.isPresent() || Strings.isBlank(id.get())) {
 			return Optional.empty();
 		}
