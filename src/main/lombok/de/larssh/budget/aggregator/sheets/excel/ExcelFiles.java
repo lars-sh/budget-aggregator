@@ -120,7 +120,7 @@ public class ExcelFiles {
 		 */
 		private static final int COLUMN_MAX_WIDTH = 255 * CHARACTER_WIDTH;
 
-		private static final String DATA_FORMAT_CURRENCY = "#,##0.00\\ \"€\";[Red]\\-#,##0.00\\ \"€\"";
+		private static final String DATA_FORMAT_CURRENCY = "#,##0.00\\ \"€\";[Red]\\-#,##0.00\\ \"€\";\"\"";
 
 		private static final String SHEET_NAME_ACCOUNTS = "Konten";
 
