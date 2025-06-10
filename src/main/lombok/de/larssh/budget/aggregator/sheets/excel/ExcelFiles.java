@@ -207,6 +207,7 @@ public class ExcelFiles {
 			table.setDisplayName(name);
 			table.setStyleName("TableStyleLight1");
 			table.getCTTable().addNewAutoFilter();
+			table.getCTTable().getTableStyleInfo().setShowRowStripes(true);
 			return table;
 		}
 
@@ -402,7 +403,6 @@ public class ExcelFiles {
 			// Table
 			sheet.createFreezePane(3, 0);
 			final XSSFTable table = createTable(sheet, SHEET_NAME_PRODUCTS);
-			table.getCTTable().getTableStyleInfo().setShowRowStripes(true);
 
 			// Totals Row
 			table.setDataRowCount(table.getDataRowCount() + 1);
