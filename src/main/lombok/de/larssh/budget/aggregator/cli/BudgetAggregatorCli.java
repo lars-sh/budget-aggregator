@@ -14,10 +14,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.jar.Attributes.Name;
+
+import org.apache.poi.poifs.filesystem.FileMagic;
 
 import de.larssh.budget.aggregator.data.Budget;
 import de.larssh.budget.aggregator.data.BudgetType;
@@ -112,7 +115,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	public Integer call() throws IOException, StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
 		for (final Path source : getSources()) {
-			budgets.addAll(Budgets.read(source));
+			budgets.addAll(readSource(source));
 		}
 
 		applyFiltersAndHide(budgets);
@@ -121,6 +124,12 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		openFile();
 
 		return ExitCode.OK;
+	}
+
+	private Collection<Budget> readSource(final Path path) throws IOException, StringParseException {
+		return FileMagic.valueOf(path.toFile()) == FileMagic.UNKNOWN //
+				? CsvFiles.read(path)
+				: ExcelFiles.read(path);
 	}
 
 	private void applyFiltersAndHide(final List<Budget> budgets) {

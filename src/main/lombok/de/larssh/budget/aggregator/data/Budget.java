@@ -21,9 +21,8 @@ import java.util.regex.Pattern;
 import org.apache.poi.ss.util.CellReference;
 
 import de.larssh.budget.aggregator.file.CsvFiles;
-import de.larssh.utils.Nullables;
-import de.larssh.utils.text.Csv;
-import de.larssh.utils.text.CsvRow;
+import de.larssh.budget.aggregator.sheets.Row;
+import de.larssh.budget.aggregator.sheets.Sheet;
 import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.StringParseException;
 import de.larssh.utils.text.Strings;
@@ -51,27 +50,23 @@ public final class Budget implements Comparable<Budget> {
 	private static final Comparator<Budget> COMPARATOR
 			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
 
-	@SuppressWarnings({
-			"checkstyle:XIllegalCatchDefault",
-			"PMD.AvoidCatchingGenericException",
-			"PMD.LooseCoupling",
-			"PMD.ShortMethodName" })
+	@SuppressWarnings({ "checkstyle:XIllegalCatchDefault", "PMD.AvoidCatchingGenericException", "PMD.ShortMethodName" })
 	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING",
 			justification = "false-positive, using StringFormatter here")
-	public static Set<Budget> of(final Csv csv) throws StringParseException {
-		final int lastNonBalanceColumn = csv.getHeaders().indexOf(CsvFiles.HEADER_ACCOUNT);
+	public static Set<Budget> of(final Sheet sheet) throws StringParseException {
+		final int lastNonBalanceColumn = sheet.getHeader().indexOf(CsvFiles.HEADER_ACCOUNT);
 		if (lastNonBalanceColumn == -1) {
 			return emptySet();
 		}
 
 		final Map<Budget, Budget> budgets = new LinkedHashMap<>();
-		for (final CsvRow row : csv.subList(1, csv.size())) {
+		for (final Row row : sheet.getRows()) {
 			try {
 				final Optional<Account> account = Account.of(row);
 				if (account.isPresent()) {
-					final int headerSize = csv.getHeaders().size();
+					final int headerSize = sheet.getHeader().size();
 					for (int columnIndex = lastNonBalanceColumn + 1; columnIndex < headerSize; columnIndex += 1) {
-						addBalance(budgets, account.get(), row, columnIndex);
+						addBalance(budgets, account.get(), row, sheet, columnIndex);
 					}
 				}
 			} catch (final Exception e) {
@@ -81,21 +76,18 @@ public final class Budget implements Comparable<Budget> {
 		return budgets.keySet();
 	}
 
-	@SuppressWarnings("PMD.LooseCoupling")
 	private static void addBalance(final Map<Budget, Budget> budgets,
 			final Account account,
-			final CsvRow row,
+			final Row row,
+			final Sheet sheet,
 			final int columnIndex) {
-		if (columnIndex >= row.size()) {
-			return;
-		}
-		final String cellValue = Nullables.orElseThrow(row.get(columnIndex));
+		final String cellValue = row.get(columnIndex).orElse(null);
 		if (Strings.isBlank(cellValue)) {
 			return;
 		}
 
-		final String title = row.getCsv().getHeaders().get(columnIndex);
-		final Optional<Matcher> columnHeaderMatcher = Patterns.matches(BUDGET_HEADER_PATTERN, title);
+		final Optional<Matcher> columnHeaderMatcher = Optional.ofNullable(sheet.getHeader().get(columnIndex))
+				.flatMap(title -> Patterns.matches(BUDGET_HEADER_PATTERN, title));
 		if (!columnHeaderMatcher.isPresent()) {
 			return;
 		}
@@ -114,9 +106,8 @@ public final class Budget implements Comparable<Budget> {
 		budgets.computeIfAbsent(budget, Function.identity()).balances.put(account, balance);
 	}
 
-	@SuppressWarnings("PMD.LooseCoupling")
 	@SuppressFBWarnings(value = "OCP_OVERLY_CONCRETE_PARAMETER", justification = "only valid for Java 20 and later")
-	private static OptionalInt determineYear(final CsvRow row, final Matcher columnHeaderMatcher) {
+	private static OptionalInt determineYear(final Row row, final Matcher columnHeaderMatcher) {
 		final String year = columnHeaderMatcher.group("year");
 		if (year != null) {
 			return OptionalInt.of(Integer.parseInt(year));

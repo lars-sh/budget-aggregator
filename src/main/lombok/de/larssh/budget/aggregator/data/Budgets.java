@@ -3,18 +3,15 @@ package de.larssh.budget.aggregator.data;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 
-import java.io.IOException;
 import java.math.BigDecimal;
-import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.poi.poifs.filesystem.FileMagic;
-
-import de.larssh.budget.aggregator.file.CsvFiles;
-import de.larssh.budget.aggregator.file.ExcelFiles;
+import de.larssh.budget.aggregator.sheets.Sheet;
+import de.larssh.budget.aggregator.sheets.SheetsFile;
 import de.larssh.utils.text.StringParseException;
 import lombok.experimental.UtilityClass;
 
@@ -33,10 +30,18 @@ public class Budgets {
 				.collect(toCollection(TreeSet::new));
 	}
 
-	public static Collection<Budget> read(final Path path) throws IOException, StringParseException {
-		return FileMagic.valueOf(path.toFile()) == FileMagic.UNKNOWN //
-				? CsvFiles.read(path)
-				: ExcelFiles.read(path);
+	public static List<Budget> of(final SheetsFile sheetsFile) throws StringParseException {
+		final List<Budget> budgets = new ArrayList<>();
+		for (final Sheet sheet : sheetsFile.getSheets()) {
+			final Set<Budget> budget = Budget.of(sheet);
+			budgets.addAll(budget);
+
+			// Add References
+			sheetsFile.getFileName()
+					.ifPresent(fileName -> Budgets.setReference(budget, BudgetReference.FILE_NAME, fileName));
+			sheet.getName().ifPresent(sheetName -> Budgets.setReference(budget, BudgetReference.SHEET, sheetName));
+		}
+		return budgets;
 	}
 
 	public static void removeDuplicateBudgets(final List<Budget> budgets) {

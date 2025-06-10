@@ -8,7 +8,6 @@ import java.nio.file.Path;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -56,19 +55,18 @@ import de.larssh.budget.aggregator.data.BudgetReference;
 import de.larssh.budget.aggregator.data.BudgetType;
 import de.larssh.budget.aggregator.data.Budgets;
 import de.larssh.budget.aggregator.data.Product;
-import de.larssh.budget.aggregator.utils.CellValues;
+import de.larssh.budget.aggregator.sheets.excel.ExcelSheets;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.OptionalInts;
 import de.larssh.utils.annotations.PackagePrivate;
 import de.larssh.utils.collection.Maps;
-import de.larssh.utils.text.Csv;
 import de.larssh.utils.text.StringParseException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports" })
+@SuppressWarnings("PMD.ExcessiveImports")
 public class ExcelFiles {
 	static {
 		// Making sure that both Workbook Factories are registered to support XLS and
@@ -79,45 +77,11 @@ public class ExcelFiles {
 	}
 
 	public static List<Budget> read(final Path source) throws IOException, StringParseException {
-		final List<Budget> budgets = new ArrayList<>();
 		try (InputStream inputStream = Files.newInputStream(source);
 				Workbook workbook = WorkbookFactory.create(inputStream)) {
-			final int numberOfSheets = workbook.getNumberOfSheets();
-			for (int sheetIndex = 0; sheetIndex < numberOfSheets; sheetIndex += 1) {
-				final Sheet sheet = workbook.getSheetAt(sheetIndex);
-
-				final Set<Budget> sheetBudgets = Budget.of(readSheet(sheet));
-				Budgets.setReference(sheetBudgets,
-						BudgetReference.FILE_NAME,
-						Nullables.orElseThrow(source.getFileName()).toString());
-				Budgets.setReference(sheetBudgets, BudgetReference.SHEET, sheet.getSheetName());
-				budgets.addAll(sheetBudgets);
-			}
+			final String fileName = Nullables.orElseThrow(source.getFileName()).toString();
+			return Budgets.of(new ExcelSheets(fileName, workbook));
 		}
-		return budgets;
-	}
-
-	@SuppressWarnings("PMD.LooseCoupling")
-	private static Csv readSheet(final Sheet sheet) {
-		final int lastRowIndex = sheet.getLastRowNum();
-		final int firstRowIndex = sheet.getFirstRowNum();
-
-		final List<List<String>> data = new ArrayList<>(lastRowIndex - firstRowIndex + 1);
-		for (int rowIndex = firstRowIndex; rowIndex <= lastRowIndex; rowIndex += 1) {
-			data.add(readRow(sheet.getRow(rowIndex)));
-		}
-		return new Csv(data);
-	}
-
-	private static List<String> readRow(final Row row) {
-		final int lastCellIndex = row.getLastCellNum();
-		final int firstCellIndex = row.getFirstCellNum();
-
-		final List<String> cells = new ArrayList<>(lastCellIndex - firstCellIndex + 1);
-		for (int cellIndex = firstCellIndex; cellIndex <= lastCellIndex; cellIndex += 1) {
-			cells.add(CellValues.getAsString(CellValues.create(row.getCell(cellIndex), true)));
-		}
-		return cells;
 	}
 
 	public static void write(final List<Budget> budgets, final OutputStream outputStream) throws IOException {

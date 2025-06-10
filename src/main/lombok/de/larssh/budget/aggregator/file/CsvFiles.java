@@ -17,8 +17,8 @@ import java.util.Set;
 import de.larssh.budget.aggregator.data.Account;
 import de.larssh.budget.aggregator.data.Balance;
 import de.larssh.budget.aggregator.data.Budget;
-import de.larssh.budget.aggregator.data.BudgetReference;
 import de.larssh.budget.aggregator.data.Budgets;
+import de.larssh.budget.aggregator.sheets.csv.CsvSheets;
 import de.larssh.utils.Finals;
 import de.larssh.utils.Nullables;
 import de.larssh.utils.annotations.PackagePrivate;
@@ -44,13 +44,11 @@ public class CsvFiles {
 
 	public static final String HEADER_ACCOUNT = Finals.constant("Bezeichnung Position");
 
-	public static Set<Budget> read(final Path source) throws IOException, StringParseException {
+	public static List<Budget> read(final Path source) throws IOException, StringParseException {
 		try (Reader reader = Files.newBufferedReader(source)) {
-			final Set<Budget> budgets = Budget.of(Csv.parse(reader, SEPARATOR, ESCAPER));
-			Budgets.setReference(budgets,
-					BudgetReference.FILE_NAME,
-					Nullables.orElseThrow(source.getFileName()).toString());
-			return budgets;
+			final String fileName = Nullables.orElseThrow(source.getFileName()).toString();
+			final Csv csv = Csv.parse(reader, SEPARATOR, ESCAPER);
+			return Budgets.of(new CsvSheets(fileName, csv));
 		}
 	}
 

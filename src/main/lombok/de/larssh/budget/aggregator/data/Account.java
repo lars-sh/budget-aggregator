@@ -5,9 +5,9 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import de.larssh.budget.aggregator.file.CsvFiles;
+import de.larssh.budget.aggregator.sheets.Row;
 import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.annotations.PackagePrivate;
-import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Patterns;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
@@ -31,8 +31,8 @@ public final class Account implements Comparable<Account> {
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(Account::getDescription));
 
 	@PackagePrivate
-	@SuppressWarnings({ "PMD.LooseCoupling", "PMD.ShortMethodName" })
-	static Optional<Account> of(final CsvRow row) {
+	@SuppressWarnings("PMD.ShortMethodName")
+	static Optional<Account> of(final Row row) {
 		final Optional<Product> product = Product.of(row);
 		if (!product.isPresent()) {
 			return Optional.empty();

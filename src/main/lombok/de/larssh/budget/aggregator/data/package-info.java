@@ -1,5 +1,5 @@
 /**
- * Command Line Interface (CLI) of the Budget Aggregator
+ * Data Model objects
  */
 @de.larssh.utils.annotations.NonNullByDefault
 package de.larssh.budget.aggregator.data;

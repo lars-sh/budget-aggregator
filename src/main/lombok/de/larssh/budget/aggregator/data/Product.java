@@ -4,9 +4,9 @@ import java.util.Comparator;
 import java.util.Optional;
 
 import de.larssh.budget.aggregator.file.CsvFiles;
+import de.larssh.budget.aggregator.sheets.Row;
 import de.larssh.budget.aggregator.utils.Comparators;
 import de.larssh.utils.annotations.PackagePrivate;
-import de.larssh.utils.text.CsvRow;
 import de.larssh.utils.text.Strings;
 import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AccessLevel;
@@ -28,8 +28,8 @@ public final class Product implements Comparable<Product> {
 			.thenComparing(Comparators.compareCaseInsensitiveFirst(Product::getDescription));
 
 	@PackagePrivate
-	@SuppressWarnings({ "PMD.LooseCoupling", "PMD.ShortMethodName", "PMD.ShortVariable" })
-	static Optional<Product> of(final CsvRow row) {
+	@SuppressWarnings({ "PMD.ShortMethodName", "PMD.ShortVariable" })
+	static Optional<Product> of(final Row row) {
 		final Optional<Municipality> municipality = Municipality.of(row);
 		if (!municipality.isPresent()) {
 			return Optional.empty();
