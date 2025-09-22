@@ -14,7 +14,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -126,7 +125,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		return ExitCode.OK;
 	}
 
-	private Collection<Budget> readSource(final Path path) throws IOException, StringParseException {
+	private List<Budget> readSource(final Path path) throws IOException, StringParseException {
 		return FileMagic.valueOf(path.toFile()) == FileMagic.UNKNOWN //
 				? CsvFiles.read(path)
 				: ExcelFiles.read(path);
