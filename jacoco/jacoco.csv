@@ -10,8 +10,8 @@ Budget Aggregator,de.larssh.budget.aggregator.sheets.csv,CsvSheets,14,0,0,0,4,0,
 Budget Aggregator,de.larssh.budget.aggregator.utils,Workbooks,111,0,12,0,22,0,13,0,7,0
 Budget Aggregator,de.larssh.budget.aggregator.utils,Comparators,49,0,6,0,7,0,7,0,4,0
 Budget Aggregator,de.larssh.budget.aggregator.utils,CellValues,257,0,31,0,30,0,30,0,10,0
-Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.SimplifiedCellStyle,34,0,0,0,2,0,1,0,1,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelRow,46,0,2,0,5,0,6,0,5,0
+Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.SimplifiedCellStyle,34,0,0,0,2,0,1,0,1,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheet,171,0,6,0,24,0,13,0,10,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheets,16,0,0,0,5,0,1,0,1,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.ExcelFileWriter,1031,0,46,0,173,0,55,0,32,0
