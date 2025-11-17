@@ -400,13 +400,15 @@ public class ExcelFiles {
 			appendProducts(sheet, products);
 			appendProductBudgets(sheet, products);
 
-			// Table
-			sheet.createFreezePane(3, 0);
-			final XSSFTable table = createTable(sheet, SHEET_NAME_PRODUCTS);
+			if (sheet.getLastRowNum() > 0) {
+				// Table
+				sheet.createFreezePane(3, 0);
+				final XSSFTable table = createTable(sheet, SHEET_NAME_PRODUCTS);
 
-			// Totals Row
-			table.setDataRowCount(table.getDataRowCount() + 1);
-			appendProductsTotalsRow(appendRow(sheet), table.getCTTable());
+				// Totals Row
+				table.setDataRowCount(table.getDataRowCount() + 1);
+				appendProductsTotalsRow(appendRow(sheet), table.getCTTable());
+			}
 		}
 
 		private void appendProducts(final Sheet sheet, final Set<Product> products) {
@@ -464,12 +466,14 @@ public class ExcelFiles {
 			appendAccounts(sheet, accounts);
 			appendAccountBudgets(sheet, accounts);
 
-			// Table
-			final XSSFTable table = createTable(sheet, SHEET_NAME_ACCOUNTS);
+			if (sheet.getLastRowNum() > 0) {
+				// Table
+				final XSSFTable table = createTable(sheet, SHEET_NAME_ACCOUNTS);
 
-			// Totals Row
-			table.setDataRowCount(table.getDataRowCount() + 1);
-			appendAccountsTotalsRow(appendRow(sheet), table.getCTTable());
+				// Totals Row
+				table.setDataRowCount(table.getDataRowCount() + 1);
+				appendAccountsTotalsRow(appendRow(sheet), table.getCTTable());
+			}
 		}
 
 		private void appendAccounts(final Sheet sheet, final Set<Account> accounts) {
