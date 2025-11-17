@@ -14,7 +14,7 @@ Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.Simplified
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelRow,46,0,2,0,5,0,6,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheet,171,0,6,0,24,0,13,0,10,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheets,16,0,0,0,5,0,1,0,1,0
-Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.ExcelFileWriter,1031,0,46,0,173,0,55,0,32,0
+Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.ExcelFileWriter,1037,0,50,0,175,0,57,0,32,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles,47,0,0,0,11,0,3,0,3,0
 Budget Aggregator,de.larssh.budget.aggregator.data,BudgetType,94,0,12,0,20,0,10,0,4,0
 Budget Aggregator,de.larssh.budget.aggregator.data,Budgets,207,0,20,0,31,0,26,0,16,0
