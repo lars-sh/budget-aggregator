@@ -67,7 +67,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
-@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports" })
+@SuppressWarnings({ "PMD.CouplingBetweenObjects", "PMD.ExcessiveImports", "PMD.GodClass" })
 public class ExcelFiles {
 	/**
 	 * Remark: {@link ExcelSheet#isApplyBudgetTypeSign()} requires this constant to
