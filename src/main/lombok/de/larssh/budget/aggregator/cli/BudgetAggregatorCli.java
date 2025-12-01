@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -110,6 +111,10 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	@Option(names = "--open-output", defaultValue = "false", negatable = true)
 	boolean openOutput;
 
+	@NonFinal
+	@Option(names = "--reverse-budgets", defaultValue = "false", negatable = true)
+	boolean reverseBudgets;
+
 	@Override
 	public Integer call() throws IOException, StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
@@ -159,6 +164,11 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 		// Hide Duplicate Budgets (requires sorted budgets!)
 		if (isHideDuplicateBudgets()) {
 			Budgets.removeDuplicateBudgets(budgets);
+		}
+
+		// Apply Budget Order
+		if (isReverseBudgets()) {
+			Collections.reverse(budgets);
 		}
 	}
 
