@@ -1,5 +1,5 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetAggregatorCli,271,0,34,0,58,0,34,0,17,0
+Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetAggregatorCli,276,0,36,0,60,0,35,0,17,0
 Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetTypeConverter,6,0,0,0,1,0,1,0,1,0
 Budget Aggregator,de.larssh.budget.aggregator.cli,YearsConverter,86,0,6,0,11,0,8,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.csv,CsvFiles.CsvFileWriter,214,0,12,0,33,0,11,0,5,0
