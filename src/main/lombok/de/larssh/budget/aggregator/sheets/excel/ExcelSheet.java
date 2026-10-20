@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Comment;
 import org.apache.poi.ss.usermodel.RichTextString;
-import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 
 import de.larssh.budget.aggregator.data.BudgetReference;
@@ -74,7 +73,7 @@ class ExcelSheet implements de.larssh.budget.aggregator.sheets.Sheet {
 		this.sheet = sheet;
 
 		final int firstColumnIndex = Workbooks.rows(sheet) //
-				.mapToInt(Row::getFirstCellNum)
+				.mapToInt(row -> row == null ? -1 : row.getFirstCellNum())
 				.min()
 				.orElse(0);
 

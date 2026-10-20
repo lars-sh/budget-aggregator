@@ -34,13 +34,19 @@ public class Budgets {
 	public static List<Budget> of(final SheetsFile sheetsFile) throws StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
 		for (final Sheet sheet : sheetsFile.getSheets()) {
-			final Set<Budget> budget = Budget.of(sheet);
-			budgets.addAll(budget);
+			try {
+				final Set<Budget> budget = Budget.of(sheet);
+				budgets.addAll(budget);
 
-			// Add References
-			sheetsFile.getFileName()
-					.ifPresent(fileName -> setReferenceIfAbsent(budget, BudgetReference.FILE_NAME, fileName));
-			sheet.getName().ifPresent(sheetName -> setReferenceIfAbsent(budget, BudgetReference.SHEET, sheetName));
+				// Add References
+				sheetsFile.getFileName()
+						.ifPresent(fileName -> setReferenceIfAbsent(budget, BudgetReference.FILE_NAME, fileName));
+				sheet.getName().ifPresent(sheetName -> setReferenceIfAbsent(budget, BudgetReference.SHEET, sheetName));
+			} catch (final Exception e) {
+				throw new StringParseException(e,
+						"Failed reading sheet%s.",
+						sheet.getName().map(name -> " \"" + name + '"').orElse(""));
+			}
 		}
 		return budgets;
 	}

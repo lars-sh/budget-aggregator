@@ -73,7 +73,7 @@ public final class Budget implements Comparable<Budget> {
 					}
 				}
 			} catch (final Exception e) {
-				throw new StringParseException(e, "Failed reading row %d.", row.getRowIndex());
+				throw new StringParseException(e, "Failed reading row %d.", row.getRowIndex() + 1);
 			}
 		}
 		return budgets.keySet();
