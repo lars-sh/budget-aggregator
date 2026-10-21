@@ -13,6 +13,7 @@ import java.util.TreeSet;
 import de.larssh.budget.aggregator.sheets.Sheet;
 import de.larssh.budget.aggregator.sheets.SheetsFile;
 import de.larssh.utils.text.StringParseException;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.experimental.UtilityClass;
 
 @UtilityClass
@@ -30,7 +31,8 @@ public class Budgets {
 				.collect(toCollection(TreeSet::new));
 	}
 
-	@SuppressWarnings("PMD.ShortMethodName")
+	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING", justification = "Parameters demark format arguments")
+	@SuppressWarnings({ "checkstyle:XIllegalCatchDefault", "PMD.AvoidCatchingGenericException", "PMD.ShortMethodName" })
 	public static List<Budget> of(final SheetsFile sheetsFile) throws StringParseException {
 		final List<Budget> budgets = new ArrayList<>();
 		for (final Sheet sheet : sheetsFile.getSheets()) {
