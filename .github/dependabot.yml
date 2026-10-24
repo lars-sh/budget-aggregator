@@ -4,3 +4,12 @@ updates:
     directory: /
     schedule:
       interval: daily
+    ignore:
+      - dependency-name: org.apache.poi:poi
+        versions: "[6.0.0,)"
+      - dependency-name: org.apache.poi:poi-ooxml
+        versions: "[6.0.0,)"
+      - dependency-name: org.apache.poi:poi-ooxml-full
+        versions: "[6.0.0,)"
+      - dependency-name: org.apache.poi:poi-ooxml-lite
+        versions: "[6.0.0,)"
