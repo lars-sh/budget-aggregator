@@ -1,6 +1,6 @@
 GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
 Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetAggregatorCli,276,0,36,0,60,0,35,0,17,0
-Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetTypeConverter,6,0,0,0,1,0,1,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.cli,BudgetTypesConverter,19,0,2,0,1,0,3,0,2,0
 Budget Aggregator,de.larssh.budget.aggregator.cli,YearsConverter,86,0,6,0,11,0,8,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.csv,CsvFiles.CsvFileWriter,214,0,12,0,33,0,11,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.csv,CsvFiles,65,0,0,0,13,0,3,0,3,0
@@ -10,8 +10,8 @@ Budget Aggregator,de.larssh.budget.aggregator.sheets.csv,CsvSheets,14,0,0,0,4,0,
 Budget Aggregator,de.larssh.budget.aggregator.utils,Workbooks,111,0,12,0,22,0,13,0,7,0
 Budget Aggregator,de.larssh.budget.aggregator.utils,Comparators,49,0,6,0,7,0,7,0,4,0
 Budget Aggregator,de.larssh.budget.aggregator.utils,CellValues,257,0,31,0,30,0,30,0,10,0
-Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelRow,46,0,2,0,5,0,6,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.SimplifiedCellStyle,34,0,0,0,2,0,1,0,1,0
+Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelRow,46,0,2,0,5,0,6,0,5,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheet,178,0,8,0,24,0,15,0,11,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelSheets,16,0,0,0,5,0,1,0,1,0
 Budget Aggregator,de.larssh.budget.aggregator.sheets.excel,ExcelFiles.ExcelFileWriter,1037,0,50,0,175,0,57,0,32,0
