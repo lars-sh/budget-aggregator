@@ -23,6 +23,7 @@ import org.apache.poi.ss.util.CellReference;
 import de.larssh.budget.aggregator.sheets.Row;
 import de.larssh.budget.aggregator.sheets.Sheet;
 import de.larssh.budget.aggregator.sheets.csv.CsvFiles;
+import de.larssh.utils.Nullables;
 import de.larssh.utils.text.Patterns;
 import de.larssh.utils.text.StringParseException;
 import de.larssh.utils.text.Strings;
@@ -47,8 +48,16 @@ public final class Budget implements Comparable<Budget> {
 	private static final Pattern BUDGET_HEADER_PATTERN
 			= Pattern.compile("^\\s*(?<budgetType>.+?)\\s*((?<year>\\d+)|(?<yearBefore>Vorjahr))?\\s*$");
 
-	private static final Comparator<Budget> COMPARATOR
-			= Comparator.<Budget>comparingInt(Budget::getYear).thenComparing(Budget::getType);
+	private static final Comparator<Budget> COMPARATOR = Comparator.<Budget>comparingInt(Budget::getYear)
+			.thenComparing(Budget::getType)
+			.thenComparing(budget -> Nullables.orElse(budget.getReferences().get(BudgetReference.BUDGET_YEAR), ""),
+					Strings.numericTextComparator(true))
+			.thenComparing(budget -> Nullables.orElse(budget.getReferences().get(BudgetReference.FILE_NAME), ""),
+					Strings.numericTextComparator(true))
+			.thenComparing(budget -> Nullables.orElse(budget.getReferences().get(BudgetReference.SHEET), ""),
+					Strings.numericTextComparator(true))
+			.thenComparing(budget -> Nullables.orElse(budget.getReferences().get(BudgetReference.COLUMN), ""),
+					Strings.numericTextComparator(true));
 
 	@SuppressWarnings({ "checkstyle:XIllegalCatchDefault", "PMD.AvoidCatchingGenericException", "PMD.ShortMethodName" })
 	@SuppressFBWarnings(value = "WEM_WEAK_EXCEPTION_MESSAGING",
