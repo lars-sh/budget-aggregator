@@ -84,7 +84,7 @@ public class BudgetAggregatorCli implements Callable<Integer>, IVersionProvider 
 	Path output = Paths.get("");
 
 	@NonFinal
-	@Option(names = "--filter-budget-types", converter = BudgetTypeConverter.class)
+	@Option(names = "--filter-budget-types", converter = BudgetTypesConverter.class)
 	Set<BudgetType> filterBudgetTypes = emptySet();
 
 	@NonFinal
